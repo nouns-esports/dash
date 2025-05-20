@@ -1,0 +1,13 @@
+{
+	"name": "db",
+	"version": "0.0.1",
+	"type": "module",
+	"devDependencies": {
+		"@types/pg": "^8.11.5"
+	},
+	"dependencies": {
+		"drizzle-kit": "0.31.0",
+		"drizzle-orm": "0.41.0",
+		"pg": "^8.11.3"
+	}
+}

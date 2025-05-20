@@ -1,0 +1,7 @@
+{
+  "name": "bot",
+  "private": true,
+  "dependencies": {
+    "discord.js": "^14.19.3"
+  }
+}
