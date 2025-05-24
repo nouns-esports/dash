@@ -18,7 +18,8 @@
 				"useNodejsImportProtocol": "off",
 				"useTemplate": "off",
 				"useImportType": "off",
-				"noNonNullAssertion": "off"
+				"noNonNullAssertion": "off",
+				"noUnusedTemplateLiteral": "off"
 			},
 			"correctness": {
 				"useExhaustiveDependencies": "off",

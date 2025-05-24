@@ -12,5 +12,7 @@ export const env = createEnv({
         PRIMARY_DATABASE_URL: z.string().min(1),
         PGPOOL_URL: z.string().min(1),
         OPENAI_API_KEY: z.string().min(1),
+        PINATA_JWT: z.string().min(1),
+        NEXT_PUBLIC_ENVIRONMENT: z.enum(["development", "production"]),
     },
 });

@@ -1,0 +1,5 @@
+output.txt
+dist
+.mastra
+*.db
+*.db-*
