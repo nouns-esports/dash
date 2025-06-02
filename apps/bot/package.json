@@ -1,7 +1,8 @@
 {
-  "name": "bot",
-  "private": true,
-  "dependencies": {
-    "discord.js": "^14.19.3"
-  }
+	"name": "bot",
+	"private": true,
+	"dependencies": {
+		"discord.js": "^14.19.3",
+		"zod": "^3.25.23"
+	}
 }

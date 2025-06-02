@@ -3,10 +3,7 @@
 	"private": true,
 	"scripts": {
 		"build": "turbo run build",
-		"dev": "turbo run dev",
-		"lint": "turbo run lint",
-		"format": "prettier --write \"**/*.{ts,tsx,md}\"",
-		"check-types": "turbo run check-types"
+		"dev": "turbo run dev"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^1.9.4",
@@ -14,10 +11,7 @@
 		"typescript": "5.8.2"
 	},
 	"dependencies": {
-		"@mastra/client-js": "^0.10.0",
-		"@t3-oss/env-core": "^0.13.4",
-		"pinata-web3": "^0.5.4",
-		"zod": "^3.25.23"
+		"@t3-oss/env-core": "^0.13.4"
 	},
 	"engines": {
 		"node": ">=18"

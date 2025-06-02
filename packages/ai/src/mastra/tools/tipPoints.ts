@@ -8,16 +8,25 @@ export const tipPoints = createTool({
     id: "internal:tipPoints",
     description: "Tip points to another user",
     inputSchema: z.object({
-        user: z.string().describe("The user id to tip points to"),
-        community: z.string().describe("The community id the points are for"),
         amount: z.number().describe("The number of points to tip"),
     }),
     outputSchema: z.boolean().describe("Whether the points were tipped successfully"),
-    execute: async ({ context }, options) => {
+    execute: async ({ context, runtimeContext }) => {
         await db.primary.transaction(async (tx) => {
+            const user = runtimeContext.get("user") as any;
+            const community = runtimeContext.get("community") as any;
+            const mentions = runtimeContext.get("mentions") as any;
+
+            if (mentions.length === 0) {
+                throw new Error("You must mention a user to tip points to");
+            }
+
+            if (!community.id) {
+                throw new Error("Community not found, please specify a community id");
+            }
 
             const pass = await tx.query.passes.findFirst({
-                where: and(eq(passes.user, context.user), eq(passes.community, context.community))
+                where: and(eq(passes.user, user.id), eq(passes.community, community.id))
             })
 
             if (!pass?.user) {
@@ -39,9 +48,9 @@ export const tipPoints = createTool({
                 .where(eq(passes.id, pass.id));
 
             await tx.insert(points).values({
-                community: context.community,
-                from: pass.user,
-                to: context.user,
+                community: community.id,
+                from: pass.id,
+                to: user.id,
                 amount: context.amount,
                 timestamp: new Date(),
             });
