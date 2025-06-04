@@ -50,15 +50,6 @@ export const communityConnections = pgTable("community_connections", (t) => ({
     config: t.jsonb().notNull().$type<Record<string, any>>(),
 }));
 
-export const discordServers = pgTable("discord_servers", (t) => ({
-    id: t.uuid().primaryKey().defaultRandom(),
-    guildId: t.text("guild_id").notNull().unique(),
-    community: t.uuid().notNull(),
-    name: t.text().notNull(),
-    image: t.text().notNull(),
-
-}));
-
 export const users = pgTable("users", (t) => ({
     id: t.uuid().primaryKey().defaultRandom(),
     privyId: t.text("privy_id").notNull().unique(),
@@ -72,32 +63,47 @@ export const wallets = pgTable("wallets", (t) => ({
     address: t.text().unique().notNull(),
     user: t.uuid(),
     community: t.uuid(),
-}));
+    escrow: t.uuid(),
+}), (t) => [
+    check(
+        "user_escrow_or_community_exists",
+        sql`(user IS NOT NULL OR escrow IS NOT NULL OR community IS NOT NULL)`
+    )
+]);
 
 export const accounts = pgTable("accounts", (t) => ({
     id: t.uuid().primaryKey().defaultRandom(),
     platform: platforms().notNull(),
     // Discord user id, Farcaster FID, Twitter user id, etc.
     identifier: t.text().notNull(),
-    user: t.uuid(),
+    user: t.uuid().notNull(),
 }));
 
 export const passes = pgTable("passes", (t) => ({
     id: t.uuid().primaryKey().defaultRandom(),
     community: t.uuid().notNull(),
-    user: t.uuid(),
+    user: t.uuid().notNull(),
     // The account that, in the future, can claim the contents of this pass to their user account that doesn't exist in the present
-    account: t.uuid(),
     tier: t.smallint().notNull().default(0),
     points: t.bigint({ mode: "number" }).notNull().default(0),
     xp: t.bigint({ mode: "number" }).notNull().default(0),
 }), (t) => [check("user_or_account_exists", sql`(user IS NOT NULL OR account IS NOT NULL)`)
 ]);
 
+export const escrows = pgTable("escrows", (t) => ({
+    id: t.uuid().primaryKey().defaultRandom(),
+    // The account that, in the future, can claim the contents of this pass to their user account that doesn't exist in the present
+    heir: t.uuid().notNull(),
+    community: t.uuid().notNull(),
+    points: t.bigint({ mode: "number" }).notNull().default(0),
+    xp: t.bigint({ mode: "number" }).notNull().default(0),
+}));
+
 export const xp = pgTable("xp", (t) => ({
     id: t.uuid().primaryKey().defaultRandom(),
+    community: t.uuid().notNull(),
+    user: t.uuid().notNull(),
     amount: t.bigint({ mode: "number" }).notNull(),
-    pass: t.uuid().notNull(),
     timestamp: t.timestamp().notNull().defaultNow(),
 }));
 
@@ -105,10 +111,15 @@ export const points = pgTable("points", (t) => ({
     id: t.uuid().primaryKey().defaultRandom(),
     community: t.uuid().notNull(),
     amount: t.bigint({ mode: "number" }).notNull(),
-    from: t.uuid().notNull(),
-    to: t.uuid().notNull(),
+    from: t.uuid(),
+    to: t.uuid(),
     timestamp: t.timestamp().notNull().defaultNow(),
-}));
+}), (t) => [
+    check(
+        "from_or_to_exists",
+        sql`("from" IS NOT NULL OR "to" IS NOT NULL)`
+    )
+]);
 
 // On frontend, use difficulty levels to determine xp and points to ensure consistency
 // export const quests = pgTable("quests", (t) => ({

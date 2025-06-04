@@ -9,7 +9,7 @@ const discord = createPlatform({
             name: "Server",
             image: "",
             config: z.object({
-                id: z.string().describe("The Discord server ID"),
+                guild: z.string().describe("The Discord server ID"),
             }).describe("The config for a Discord server connection"),
         }
     },

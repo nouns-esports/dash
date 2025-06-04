@@ -16,12 +16,28 @@ export type DashRuntimeContext = {
     community?: typeof communities.$inferSelect & {
         connections: typeof communityConnections.$inferSelect[];
     };
-    user: typeof users.$inferSelect;
+    room: string;
+    user: typeof users.$inferSelect & {
+        accounts: typeof accounts.$inferSelect[];
+        passes: typeof passes.$inferSelect[];
+    };
     mentions?: Array<typeof accounts.$inferSelect & {
         pass: typeof passes.$inferSelect;
         user: typeof users.$inferSelect | null;
     }>;
 }
+
+export const memory = new Memory({
+    storage: new PostgresStore({
+        connectionString: env.PRIMARY_DATABASE_URL,
+        schemaName: "mastra"
+    }),
+    // options: {
+    //     threads: {
+    //         generateTitle: true,
+    //     }
+    // }
+})
 
 export const dash = new Agent({
     name: "Dash",
@@ -81,10 +97,5 @@ export const dash = new Agent({
 
         return availableTools
     },
-    memory: new Memory({
-        storage: new PostgresStore({
-            connectionString: env.PRIMARY_DATABASE_URL,
-            schemaName: "mastra"
-        }),
-    })
+    memory
 })

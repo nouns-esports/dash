@@ -1,34 +1,34 @@
 {
-	"linter": {
-		"rules": {
-			"suspicious": {
-				"noExplicitAny": "off",
-				"noArrayIndexKey": "off",
-				"noConfusingVoidType": "off"
-			},
-			"a11y": {
-				"useIframeTitle": "off",
-				"useButtonType": "off",
-				"useAltText": "off",
-				"noSvgWithoutTitle": "off",
-				"useKeyWithClickEvents": "off"
-			},
-			"style": {
-				"useNumberNamespace": "off",
-				"useNodejsImportProtocol": "off",
-				"useTemplate": "off",
-				"useImportType": "off",
-				"noNonNullAssertion": "off",
-				"noUnusedTemplateLiteral": "off"
-			},
-			"correctness": {
-				"useExhaustiveDependencies": "off",
-				"useJsxKeyInIterable": "off",
-				"noEmptyPattern": "off"
-			},
-			"complexity": {
-				"useOptionalChain": "off"
-			}
-		}
-	}
+  "linter": {
+    "rules": {
+      "suspicious": {
+        "noExplicitAny": "off",
+        "noArrayIndexKey": "off",
+        "noConfusingVoidType": "off"
+      },
+      "a11y": {
+        "useIframeTitle": "off",
+        "useButtonType": "off",
+        "useAltText": "off",
+        "noSvgWithoutTitle": "off",
+        "useKeyWithClickEvents": "off"
+      },
+      "style": {
+        "useNumberNamespace": "off",
+        "useNodejsImportProtocol": "off",
+        "useTemplate": "off",
+        "useImportType": "off",
+        "noNonNullAssertion": "off",
+        "noUnusedTemplateLiteral": "off"
+      },
+      "correctness": {
+        "useExhaustiveDependencies": "off",
+        "useJsxKeyInIterable": "off",
+        "noEmptyPattern": "off"
+      },
+      "complexity": {
+        "useOptionalChain": "off"
+      }
+    }
+  }
 }
