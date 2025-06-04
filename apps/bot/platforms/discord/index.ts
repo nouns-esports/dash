@@ -3,7 +3,7 @@ import { env } from "~/env";
 import { mastraClient } from "~/packages/server/clients/mastra";
 import z from "zod";
 import { type DashRuntimeContext } from "~/packages/ai/src/mastra/agents";
-import { getCommunityFromServer } from "~/packages/server/queries/communities";
+import { getCommunityFromServer } from "~/packages/server/queries/getCommunityFromServer";
 import { getUser } from "~/packages/server/queries/getUser";
 import { createUser } from "~/packages/server/mutations/createUser";
 import { createCommunity } from "~/packages/server/mutations/createCommunity";
