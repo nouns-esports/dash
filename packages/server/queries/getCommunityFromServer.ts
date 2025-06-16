@@ -16,7 +16,16 @@ export async function getCommunityFromServer(input: {
         with: {
             admins: true,
             connections: true,
-        }
+        },
+        extras: {
+            boosts: sql<number>`
+                (
+                    SELECT COALESCE(SUM(passes.boosts), 0)
+                    FROM passes
+                    WHERE passes.community = ${communities.id}
+                )
+            `.as("boosts"),
+        },
     });
 
     return community;

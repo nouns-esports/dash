@@ -1,8 +1,8 @@
 import { z } from "zod";
 import { createTool } from "@mastra/core/tools";
-import { db } from "~/packages/db";
+import { db } from "../../../../../packages/db";
 import { and, eq } from "drizzle-orm";
-import { passes } from "~/packages/db/schema/public";
+import { passes } from "../../../../../packages/db/schema/public";
 
 export const fetchPass = createTool({
     id: "internal:fetchPass",

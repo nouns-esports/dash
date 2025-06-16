@@ -1,7 +1,7 @@
 import { Mastra } from '@mastra/core';
 import { dash, type DashRuntimeContext } from './agents';
-import { env } from '~/env';
-import { platformTypes } from '~/packages/platforms';
+import { env } from '../../../../env';
+import { platformTypes } from '../../../../packages/platforms';
 
 export const mastra = new Mastra({
     agents: {

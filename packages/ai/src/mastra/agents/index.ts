@@ -1,11 +1,11 @@
 import { openai } from "@ai-sdk/openai";
 import { Agent } from "@mastra/core";
 import { createTool } from "@mastra/core/tools";
-import { Memory } from "@mastra/memory";
-import { accounts, communities, communityConnections, passes, users } from "~/packages/db/schema/public";
-import { PostgresStore } from "@mastra/pg";
-import { env } from "~/env";
-import { platforms, type Platforms } from "~/packages/platforms";
+// import { Memory } from "@mastra/memory";
+import { accounts, communities, communityConnections, passes, users } from "../../../../../packages/db/schema/public";
+// import { PostgresStore } from "@mastra/pg";
+// import { env } from "~/env";
+import { platforms, type Platforms } from "../../../../../packages/platforms";
 
 // Internal Tools
 import { fetchPass } from "../tools/fetchPass";
@@ -15,6 +15,7 @@ export type DashRuntimeContext = {
     platform: Platforms;
     community?: typeof communities.$inferSelect & {
         connections: typeof communityConnections.$inferSelect[];
+        boosts: number;
     };
     room: string;
     user: typeof users.$inferSelect & {
@@ -22,34 +23,34 @@ export type DashRuntimeContext = {
         passes: typeof passes.$inferSelect[];
     };
     mentions?: Array<typeof accounts.$inferSelect & {
-        pass: typeof passes.$inferSelect;
-        user: typeof users.$inferSelect | null;
+        user: typeof users.$inferSelect & {
+            passes: typeof passes.$inferSelect[];
+        } | null;
     }>;
 }
 
-export const memory = new Memory({
-    storage: new PostgresStore({
-        connectionString: env.PRIMARY_DATABASE_URL,
-        schemaName: "mastra"
-    }),
-    // options: {
-    //     threads: {
-    //         generateTitle: true,
-    //     }
-    // }
-})
+// export const memory = new Memory({
+//     storage: new PostgresStore({
+//         connectionString: env.PRIMARY_DATABASE_URL,
+//         schemaName: "mastra"
+//     }),
+//     // options: {
+//     //     threads: {
+//     //         generateTitle: true,
+//     //     }
+//     // }
+// })
 
 export const dash = new Agent({
     name: "Dash",
-    // TODO: Use Gemini 2.5 Flash
     model: async ({ runtimeContext }) => {
         const community = runtimeContext.get("community") as DashRuntimeContext["community"];
 
-        if (community?.tier === 0) {
-            return openai("gpt-4o");
+        if (community?.boosts === 0) {
+            return openai("o4-mini");
         }
 
-        return openai("gpt-4o");
+        return openai("o4-mini");
     },
     instructions: async ({ runtimeContext }) => {
         const community = runtimeContext.get("community") as DashRuntimeContext["community"];
@@ -97,5 +98,5 @@ export const dash = new Agent({
 
         return availableTools
     },
-    memory
+    // memory
 })

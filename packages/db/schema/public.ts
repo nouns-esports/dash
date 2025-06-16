@@ -1,17 +1,15 @@
 import { sql } from "drizzle-orm";
-import { check, pgEnum, pgTable } from "drizzle-orm/pg-core";
-import { connectionTypes, platformTypes } from "~/packages/platforms";
+import { check, pgEnum, pgTable, text } from "drizzle-orm/pg-core";
+import type { Platforms, Connections } from "../../platforms";
 
-export const platforms = pgEnum("platforms", platformTypes);
-export const connections = pgEnum("connections", connectionTypes);
+const platforms = () => text().$type<Platforms>();
+const connections = () => text().$type<Connections>();
 
 export const communities = pgTable("communities", (t) => ({
     id: t.uuid().primaryKey().defaultRandom(),
     handle: t.text().notNull().unique(),
     image: t.text().notNull(),
     name: t.text().notNull(),
-    // The tier of the community, 0 is free
-    tier: t.smallint().notNull().default(0),
     // Custom XP level configuration
     levels: t.jsonb().$type<{
         // Maximum xp required to reach the next level
@@ -25,6 +23,8 @@ export const communities = pgTable("communities", (t) => ({
     points: t.jsonb().$type<{
         name: string;
         image: string;
+        // The pool of dollars that can be redeemed proportionally from points
+        marketcap: number;
     }>(),
     // The custom agent identity, defaults to Dash
     agent: t.jsonb().$type<{
@@ -33,13 +33,13 @@ export const communities = pgTable("communities", (t) => ({
         // The custom system prompt to use for the agent
         prompt: string;
     }>(),
-    createdAt: t.timestamp("created_at").notNull().defaultNow(),
 }));
 
 export const communityAdmins = pgTable("community_admins", (t) => ({
     id: t.uuid().primaryKey().defaultRandom(),
     community: t.uuid().notNull(),
     user: t.uuid().notNull(),
+    owner: t.boolean().notNull(),
 }));
 
 export const communityConnections = pgTable("community_connections", (t) => ({
@@ -55,7 +55,6 @@ export const users = pgTable("users", (t) => ({
     privyId: t.text("privy_id").notNull().unique(),
     name: t.text().notNull(),
     image: t.text().notNull(),
-    createdAt: t.timestamp("created_at").notNull(),
 }));
 
 export const wallets = pgTable("wallets", (t) => ({
@@ -63,11 +62,10 @@ export const wallets = pgTable("wallets", (t) => ({
     address: t.text().unique().notNull(),
     user: t.uuid(),
     community: t.uuid(),
-    escrow: t.uuid(),
 }), (t) => [
     check(
-        "user_escrow_or_community_exists",
-        sql`(user IS NOT NULL OR escrow IS NOT NULL OR community IS NOT NULL)`
+        "user_or_community_exists",
+        sql`(user IS NOT NULL OR community IS NOT NULL)`
     )
 ]);
 
@@ -83,16 +81,16 @@ export const passes = pgTable("passes", (t) => ({
     id: t.uuid().primaryKey().defaultRandom(),
     community: t.uuid().notNull(),
     user: t.uuid().notNull(),
-    // The account that, in the future, can claim the contents of this pass to their user account that doesn't exist in the present
-    tier: t.smallint().notNull().default(0),
+    // The number of boosts the user has on this community
+    boosts: t.integer().notNull().default(0),
     points: t.bigint({ mode: "number" }).notNull().default(0),
     xp: t.bigint({ mode: "number" }).notNull().default(0),
-}), (t) => [check("user_or_account_exists", sql`(user IS NOT NULL OR account IS NOT NULL)`)
-]);
+}));
 
+// Create points and xp records on claim
 export const escrows = pgTable("escrows", (t) => ({
     id: t.uuid().primaryKey().defaultRandom(),
-    // The account that, in the future, can claim the contents of this pass to their user account that doesn't exist in the present
+    // The account that, in the future, can claim the contents of this escrow to their user account that doesn't exist in the present
     heir: t.uuid().notNull(),
     community: t.uuid().notNull(),
     points: t.bigint({ mode: "number" }).notNull().default(0),

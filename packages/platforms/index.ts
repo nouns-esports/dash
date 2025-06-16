@@ -20,7 +20,6 @@ const farcaster = createPlatform({
     name: "Farcaster",
     image: "",
     connections: {
-        // TODO: Change this so that the type and returned value is farcaster:account
         account: {
             name: "Account",
             image: "",
@@ -42,12 +41,12 @@ const farcaster = createPlatform({
 export const platforms = {
     discord,
     farcaster,
-} satisfies Record<string, ReturnType<typeof createPlatform>>
+} as const;
 
 export type Platforms = keyof typeof platforms;
-export type Connections = {
-    [K in keyof typeof platforms]: keyof (typeof platforms)[K]['connections']
-}[keyof typeof platforms];
 
-export const platformTypes = Object.keys(platforms) as [Platforms, ...(Platforms extends any ? Exclude<Platforms, Platforms> extends never ? [] : Platforms[] : never)];
-export const connectionTypes = Object.values(platforms).flatMap((platform) => Object.keys(platform.connections)) as [Connections, ...(Connections extends any ? Exclude<Connections, Connections> extends never ? [] : Connections[] : never)];
+export type Connections = {
+    [K in keyof typeof platforms]: {
+        [C in keyof (typeof platforms)[K]['connections']]: `${K & string}:${C & string}`
+    }[keyof (typeof platforms)[K]['connections']]
+}[keyof typeof platforms];
