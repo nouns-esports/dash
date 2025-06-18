@@ -10,6 +10,8 @@ import { createHash } from "crypto";
 import { getMentionedAccounts } from "~/packages/server/queries/getMentionedAccounts";
 import { createAccounts } from "~/packages/server/mutations/createAccounts";
 import { randomUUID } from "crypto";
+import { RuntimeContext } from '@mastra/core/runtime-context';
+
 // import { createCommunity } from "~/packages/server/mutations/createCommunity";
 // import { getCommunity } from "~/packages/server/queries/getCommunity";
 
@@ -197,13 +199,21 @@ client.on("messageCreate", async (message) => {
 
         const agent = mastraClient.getAgent("dash");
 
-        const runtimeContext: DashRuntimeContext = {
-            platform: "discord",
-            room,
-            community,
-            user,
-            mentions: mentionedAccounts,
-        }
+        // const runtimeContext: DashRuntimeContext = {
+        //     platform: "discord",
+        //     room,
+        //     community,
+        //     user,
+        //     mentions: mentionedAccounts,
+        // }
+
+        const runtimeContext = new RuntimeContext<DashRuntimeContext>()
+
+        runtimeContext.set("platform", "discord");
+        runtimeContext.set("room", room);
+        runtimeContext.set("community", community);
+        runtimeContext.set("user", user);
+        runtimeContext.set("mentions", mentionedAccounts);
 
         const response = await agent.generate({
             messages: [
@@ -226,7 +236,13 @@ client.on("messageCreate", async (message) => {
                 thread: {
                     id: randomUUID(),
                     resourceId: user.id,
-                    metadata: runtimeContext
+                    metadata: {
+                        platform: "discord",
+                        room,
+                        community,
+                        user,
+                        mentions: mentionedAccounts,
+                    }
                 },
                 resource: user.id
             }
