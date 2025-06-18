@@ -9,6 +9,7 @@ import { platforms, type Platforms } from "../../../../platforms";
 
 // Internal Tools
 import { tipPoints } from "../tools/tipPoints";
+import { getLevel } from "~/packages/server/utils/getLevel";
 
 // When update this type, remember to migrate any existing thread metadata on mastra.mastra_threads.metadata
 export type DashRuntimeContext = {
@@ -80,7 +81,7 @@ export const dash = new Agent({
           ${user.passes.length > 0 ? `The user is a member of the following communities: ${user.passes.map((pass) => pass.community.name).join(", ")}.` : "The user is not a member of any communities."}
           ${user.passes.length > 0 ? `The user has the following balances in each community: ${user.passes.map((pass) => `\n${pass.community.name}: ${pass.points} ${pass.community.points?.name ?? "points"}`).join(", ")}.` : ""}
           ${user.passes.length > 0 ? `The user has boosted the following communities: ${user.passes.filter((pass) => pass.boosts > 0).map((pass) => `\n${pass.community.name}: ${pass.boosts} boosts`).join(", ")}.` : ""}
-          ${user.passes.length > 0 ? `The user has the following xp in each community: ${user.passes.map((pass) => `\n${pass.community.name}: ${pass.xp} xp`).join(", ")}.` : ""}
+          ${user.passes.length > 0 ? `The user has the following xp levels in each community: ${user.passes.map((pass) => `\n${pass.community.name}: ${pass.xp} xp / level ${getLevel({ xp: pass.xp, config: pass.community.levels }).currentLevel}`).join(", ")}.` : ""}
         
           MESSAGE CONTEXT:
           ${mentions.length > 0 && platform !== "internal" ? `The user mentioned the following ${platform} accounts ${mentions.map((mention) => mention.id).join(", ")} in the message.` : ""}

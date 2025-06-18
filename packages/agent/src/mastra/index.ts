@@ -41,16 +41,8 @@ export const mastra = new Mastra({
                         deprecated_featured: false,
                         connections: [],
                         boosts: 0,
-                        levels: {
-                            max: 100,
-                            midpoint: 50,
-                            steepness: 0.5,
-                        },
-                        points: {
-                            name: "Points",
-                            image: "https://i.pravatar.cc/150?u=123",
-                            marketcap: 100,
-                        },
+                        levels: null,
+                        points: null,
                     } satisfies DashRuntimeContext["community"]);
 
                     runtimeContext.set("platform", "discord");

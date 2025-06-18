@@ -12,6 +12,8 @@ export const communities = pgTable("communities", (t) => ({
     name: t.text().notNull(),
     // Custom XP level configuration
     levels: t.jsonb().$type<{
+        // Starting xp required to reach level 2
+        base: number;
         // Maximum xp required to reach the next level
         max: number;
         // The midpoint of the curve
