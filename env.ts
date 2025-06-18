@@ -9,6 +9,7 @@ export const env = createEnv({
         DISCORD_CLIENT_ID: z.string(),
         DISCORD_TOKEN: z.string(),
         FARCASTER_FID: z.string(),
+        MASTRA_SERVER: z.string().url(),
         NEYNAR_API_KEY: z.string(),
         OPENAI_API_KEY: z.string(),
         PGPOOL_URL: z.string(),
