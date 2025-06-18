@@ -2,58 +2,79 @@ import { z } from "zod";
 import { createTool } from "@mastra/core/tools";
 import { db } from "../../../../../packages/db";
 import { and, eq, sql } from "drizzle-orm";
-import { passes, points } from "../../../../../packages/db/schema/public";
+import { escrows, passes, points } from "../../../../../packages/db/schema/public";
+import type { DashRuntimeContext } from "../agents";
 
 export const tipPoints = createTool({
     id: "internal:tipPoints",
-    description: "Tip points to another user",
+    description: "Tip points to another user in the same community",
     inputSchema: z.object({
         amount: z.number().describe("The number of points to tip"),
     }),
     outputSchema: z.boolean().describe("Whether the points were tipped successfully"),
     execute: async ({ context, runtimeContext }) => {
         await db.primary.transaction(async (tx) => {
-            const user = runtimeContext.get("user") as any;
-            const community = runtimeContext.get("community") as any;
-            const mentions = runtimeContext.get("mentions") as any;
+            const user = runtimeContext.get("user") as DashRuntimeContext["user"];
+            const community = runtimeContext.get("community") as DashRuntimeContext["community"];
+            const mentions = runtimeContext.get("mentions") as DashRuntimeContext["mentions"];
 
-            if (mentions.length === 0) {
+            const mention = mentions[0];
+
+            if (!mention) {
                 throw new Error("You must mention a user to tip points to");
             }
 
-            if (!community.id) {
-                throw new Error("Community not found, please specify a community id");
+            if (!community) {
+                throw new Error("Community is required to tip points");
             }
 
-            const pass = await tx.query.passes.findFirst({
-                where: and(eq(passes.user, user.id), eq(passes.community, community.id))
-            })
+            const pass = user.passes.find((pass) => pass.community.id === community.id);
 
-            if (!pass?.user) {
-                return false
+            if (!pass || pass.points < context.amount) {
+                throw new Error("You do not have enough points to tip");
             }
 
-            await tx
-                .update(passes)
-                .set({
-                    points: sql`${passes.points} - ${context.amount}`,
-                })
-                .where(eq(passes.id, pass.id));
 
-            await tx
-                .update(passes)
-                .set({
-                    points: sql`${passes.points} + ${context.amount}`,
-                })
-                .where(eq(passes.id, pass.id));
-
-            await tx.insert(points).values({
+            await tx.insert(passes).values({
+                user: user.id,
                 community: community.id,
-                from: pass.id,
-                to: user.id,
-                amount: context.amount,
-                timestamp: new Date(),
+            }).onConflictDoUpdate({
+                target: [passes.user, passes.community],
+                set: {
+                    points: sql`${passes.points} - ${context.amount}`,
+                },
             });
+
+            if (mention.user) {
+                await tx.insert(passes).values({
+                    user: mention.user.id,
+                    community: community.id,
+                    points: context.amount,
+                }).onConflictDoUpdate({
+                    target: [passes.user, passes.community],
+                    set: {
+                        points: sql`${passes.points} + ${context.amount}`,
+                    },
+                });
+
+                await tx.insert(points).values({
+                    community: community.id,
+                    from: user.id,
+                    to: mention.user.id,
+                    amount: context.amount,
+                });
+            } else {
+                await tx.insert(escrows).values({
+                    community: community.id,
+                    heir: mention.id,
+                    points: context.amount,
+                }).onConflictDoUpdate({
+                    target: [escrows.community, escrows.heir],
+                    set: {
+                        points: sql`${escrows.points} + ${context.amount}`,
+                    },
+                });
+            }
         });
 
         return true

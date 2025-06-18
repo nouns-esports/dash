@@ -6,6 +6,9 @@ import { type DashRuntimeContext } from "~/packages/ai/src/mastra/agents";
 import { getCommunityFromServer } from "~/packages/server/queries/getCommunityFromServer";
 import { getUser } from "~/packages/server/queries/getUser";
 import { createUser } from "~/packages/server/mutations/createUser";
+import { createHash } from "crypto";
+import { getMentionedAccounts } from "~/packages/server/queries/getMentionedAccounts";
+import { createAccounts } from "~/packages/server/mutations/createAccounts";
 // import { createCommunity } from "~/packages/server/mutations/createCommunity";
 // import { getCommunity } from "~/packages/server/queries/getCommunity";
 
@@ -135,7 +138,7 @@ client.on("messageCreate", async (message) => {
         const mentioned = message.mentions.has(client.user.id);
         if (!mentioned) return;
 
-        console.log("messageCreate", {
+        console.log("Message:", {
             author: message.author.username,
             message: message.content,
             channel: message.channel.id,
@@ -144,15 +147,18 @@ client.on("messageCreate", async (message) => {
 
         await message.channel.sendTyping();
 
-        const mentions = message.mentions.users
-            .filter((user) => user.id !== client.user?.id)
+        const mentions = Array.from(message.mentions.users.values())
+            .filter((user) => user.id !== client.user?.id);
 
         const room = message.channel.isDMBased() ? `dm:${message.author.id}` : `channel:${message.channel.id}`;
         const embeds: string[] = [];
 
+        if (!message.guild?.id) {
+            return message.reply("Sorry, I can only reply in servers right now.");
+        }
 
         const community = await getCommunityFromServer({
-            guild: message.guild?.id ?? "",
+            guild: message.guild.id,
         });
 
         if (!community) {
@@ -174,6 +180,20 @@ client.on("messageCreate", async (message) => {
             });
         }
 
+        let mentionedAccounts = await getMentionedAccounts({
+            identifiers: mentions.map((mention) => mention.id),
+            platform: "discord",
+        });
+
+        const missingAccounts = mentions.filter((mention) => !mentionedAccounts.find((account) => account.identifier === mention.id));
+
+        if (missingAccounts.length > 0) {
+            mentionedAccounts = await createAccounts({
+                identifiers: missingAccounts.map((mention) => mention.id),
+                platform: "discord",
+            });
+        }
+
         const agent = mastraClient.getAgent("dash");
 
         // TODO: Add mentions to runtime context
@@ -182,6 +202,7 @@ client.on("messageCreate", async (message) => {
             room,
             community,
             user,
+            mentions: mentionedAccounts,
         }
 
         const response = await agent.generate({
@@ -206,7 +227,8 @@ client.on("messageCreate", async (message) => {
 
         message.reply(response.object.text);
     } catch (error) {
-        console.error(error);
-        message.reply("Sorry, something went wrong.");
+        const digest = createHash("sha256").update(JSON.stringify(error)).digest("hex");
+        console.error(`Error: ${digest}`, error);
+        message.reply(`Sorry, something went wrong.\n\n${digest}`);
     }
 });

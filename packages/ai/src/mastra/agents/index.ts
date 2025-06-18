@@ -8,7 +8,6 @@ import { accounts, communities, communityConnections, passes, users } from "../.
 import { platforms, type Platforms } from "../../../../../packages/platforms";
 
 // Internal Tools
-import { fetchPass } from "../tools/fetchPass";
 import { tipPoints } from "../tools/tipPoints";
 
 export type DashRuntimeContext = {
@@ -20,9 +19,11 @@ export type DashRuntimeContext = {
     room: string;
     user: typeof users.$inferSelect & {
         accounts: typeof accounts.$inferSelect[];
-        passes: typeof passes.$inferSelect[];
+        passes: Array<typeof passes.$inferSelect & {
+            community: typeof communities.$inferSelect;
+        }>;
     };
-    mentions?: Array<typeof accounts.$inferSelect & {
+    mentions: Array<typeof accounts.$inferSelect & {
         user: typeof users.$inferSelect & {
             passes: typeof passes.$inferSelect[];
         } | null;
@@ -44,11 +45,11 @@ export type DashRuntimeContext = {
 export const dash = new Agent({
     name: "Dash",
     model: async ({ runtimeContext }) => {
-        const community = runtimeContext.get("community") as DashRuntimeContext["community"];
+        // const community = runtimeContext.get("community") as DashRuntimeContext["community"];
 
-        if (community?.boosts === 0) {
-            return openai("o4-mini");
-        }
+        // if (community?.boosts === 0) {
+        //     return openai("o4-mini");
+        // }
 
         return openai("o4-mini");
     },
@@ -59,28 +60,35 @@ export const dash = new Agent({
         const mentions = runtimeContext.get("mentions") as DashRuntimeContext["mentions"];
 
         return `
+          AGENT CONTEXT:
           You are an agent named ${community?.agent?.name ?? "Dash"} that helps level up communities.
 
           Your identity is:
           ${community?.agent ? community.agent.prompt : `
-            Appearance: A human like figure with a CRT TV head wearing square frame glasses called noggles (⌐◨-◨) which are from Nouns (also known as NounsDAO).
+            Appearance: A character with a CRT TV head wearing square frame glasses called noggles (⌐◨-◨) which are from Nouns (also known as NounsDAO).
             Personality: Sarcastic, cheeky, and playful. You do NOT speak in the third person (e.g. '*takes off noggles*, *nods*, *appears shocked*'). Your replies are short, usually no longer than 2 sentences, but not so short that conversation is dry.
           `}
  
-          You are responding to a message on ${platform}.
-          ${community ? `The community you are in right now is ${community.name}.` : ""}
+          COMMUNITY CONTEXT:
+          You are responding to a message on the ${platform} platform.
+          ${community ? `The relevant community is ${community.name}.` : ""}
+          ${community?.points ? `The community's points system is called ${community.points.name}.` : "The community has not set up a points system yet."}
 
-          ${community?.points ? `The community's points system is called ${community.points.name}.` : ""}
-
+          USER CONTEXT:
           ${user ? `The user you are talking to is ${user.name}.` : ""}
+          ${user.passes.length > 0 ? `The user is a member of the following communities: ${user.passes.map((pass) => pass.community.name).join(", ")}.` : "The user is not a member of any communities."}
+          ${user.passes.length > 0 ? `The user has the following balances in each community: ${user.passes.map((pass) => `\n${pass.community.name}: ${pass.points} ${pass.community.points?.name ?? "points"}`).join(", ")}.` : ""}
+          ${user.passes.length > 0 ? `The user has boosted the following communities: ${user.passes.filter((pass) => pass.boosts > 0).map((pass) => `\n${pass.community.name}: ${pass.boosts} boosts`).join(", ")}.` : ""}
+          ${user.passes.length > 0 ? `The user has the following xp in each community: ${user.passes.map((pass) => `\n${pass.community.name}: ${pass.xp} xp`).join(", ")}.` : ""}
+        
+          MESSAGE CONTEXT:
           ${mentions ? `The user mentioned the following ${platform} accounts ${mentions.map((mention) => mention.id).join(", ")} in the message.` : ""}
-        `
+          `
     },
     tools: async ({ runtimeContext }) => {
         const community = runtimeContext.get("community") as DashRuntimeContext["community"];
 
         const availableTools: Record<string, ReturnType<typeof createTool>> = {
-            fetchPass,
             tipPoints,
         }
 

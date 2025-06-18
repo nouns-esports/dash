@@ -1,6 +1,6 @@
 import "./patch/compression"; // BUG PATCH
 import type { Config } from "drizzle-kit";
-import { env } from "~/env";
+import { env } from "../../env";
 
 export default {
 	dialect: "postgresql",

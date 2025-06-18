@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { check, pgEnum, pgTable, text } from "drizzle-orm/pg-core";
+import { check, index, pgTable, text, uniqueIndex } from "drizzle-orm/pg-core";
 import type { Platforms, Connections } from "../../platforms";
 
 const platforms = () => text().$type<Platforms>();
@@ -33,6 +33,11 @@ export const communities = pgTable("communities", (t) => ({
         // The custom system prompt to use for the agent
         prompt: string;
     }>(),
+    // DEPRECATED
+    deprecated_description: t.jsonb(),
+    deprecated_parentUrl: t.text("parent_url"),
+    deprecated_details: t.jsonb(),
+    deprecated_featured: t.boolean().notNull().default(false),
 }));
 
 export const communityAdmins = pgTable("community_admins", (t) => ({
@@ -55,6 +60,12 @@ export const users = pgTable("users", (t) => ({
     privyId: t.text("privy_id").notNull().unique(),
     name: t.text().notNull(),
     image: t.text().notNull(),
+    canRecieveEmails: t.boolean("can_recieve_emails").notNull().default(false),
+    // DEPRECATED
+    deprecated_bio: t.text(),
+    deprecated_twitter: t.text(),
+    deprecated_discord: t.text(),
+    deprecated_fid: t.integer(),
 }));
 
 export const wallets = pgTable("wallets", (t) => ({
@@ -74,7 +85,7 @@ export const accounts = pgTable("accounts", (t) => ({
     platform: platforms().notNull(),
     // Discord user id, Farcaster FID, Twitter user id, etc.
     identifier: t.text().notNull(),
-    user: t.uuid().notNull(),
+    user: t.uuid(),
 }));
 
 export const passes = pgTable("passes", (t) => ({
@@ -83,9 +94,15 @@ export const passes = pgTable("passes", (t) => ({
     user: t.uuid().notNull(),
     // The number of boosts the user has on this community
     boosts: t.integer().notNull().default(0),
-    points: t.bigint({ mode: "number" }).notNull().default(0),
+    points: t.numeric({ precision: 38, scale: 18, mode: "number" }).notNull().default(0),
     xp: t.bigint({ mode: "number" }).notNull().default(0),
-}));
+}), (t) => [
+    uniqueIndex("passes_user_community_unique").on(t.user, t.community),
+    index("passes_xp_idx").on(t.xp),
+    index("passes_points_idx").on(t.points),
+    index("passes_boosts_idx").on(t.boosts),
+    check("points_balance", sql`${t.points} >= 0`),
+]);
 
 // Create points and xp records on claim
 export const escrows = pgTable("escrows", (t) => ({
@@ -93,7 +110,7 @@ export const escrows = pgTable("escrows", (t) => ({
     // The account that, in the future, can claim the contents of this escrow to their user account that doesn't exist in the present
     heir: t.uuid().notNull(),
     community: t.uuid().notNull(),
-    points: t.bigint({ mode: "number" }).notNull().default(0),
+    points: t.numeric({ precision: 38, scale: 18, mode: "number" }).notNull().default(0),
     xp: t.bigint({ mode: "number" }).notNull().default(0),
 }));
 
@@ -101,17 +118,34 @@ export const xp = pgTable("xp", (t) => ({
     id: t.uuid().primaryKey().defaultRandom(),
     community: t.uuid().notNull(),
     user: t.uuid().notNull(),
-    amount: t.bigint({ mode: "number" }).notNull(),
+    amount: t.bigint({ mode: "number" }).notNull(), // Convert to Bigint 
     timestamp: t.timestamp().notNull().defaultNow(),
+    // Think
+    quest: t.bigint({ mode: "number" }),
+    snapshot: t.integer(),
+    station: t.integer(),
+    checkin: t.integer(),
+    prediction: t.bigint({ mode: "number" }),
+    vote: t.integer(),
+    proposal: t.integer(),
+    order: t.text(),
+    raffleEntry: t.integer(),
+    attendee: t.integer(),
 }));
 
 export const points = pgTable("points", (t) => ({
     id: t.uuid().primaryKey().defaultRandom(),
     community: t.uuid().notNull(),
-    amount: t.bigint({ mode: "number" }).notNull(),
+    amount: t.numeric({ precision: 38, scale: 18, mode: "number" }).notNull(),
     from: t.uuid(),
     to: t.uuid(),
     timestamp: t.timestamp().notNull().defaultNow(),
+    // Think
+    order: t.text(),
+    checkin: t.integer(),
+    raffleEntry: t.integer(),
+    bet: t.integer(),
+    prediction: t.bigint({ mode: "number" }),
 }), (t) => [
     check(
         "from_or_to_exists",

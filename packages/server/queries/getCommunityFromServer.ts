@@ -7,12 +7,12 @@ export async function getCommunityFromServer(input: {
 }) {
     const community = await db.pgpool.query.communities.findFirst({
         where: sql`${communities.id} = (
-            SELECT ${communityConnections.community}
-            FROM ${communityConnections}
-            WHERE ${communityConnections.platform} = 'discord'
-            AND ${communityConnections.type} = 'server'
-            AND ${communityConnections.config}->>'guildId' = ${input.guild}
-        )`,
+            SELECT cc.community
+            FROM ${communityConnections} AS cc
+            WHERE cc.platform = 'discord'
+              AND cc.type = 'discord:server'
+              AND cc.config->>'guild' = ${input.guild}
+          )`,
         with: {
             admins: true,
             connections: true,

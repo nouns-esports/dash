@@ -9,13 +9,17 @@ export async function getUser(input: {
 }) {
     return db.pgpool.query.users.findFirst({
         where: sql`${users.id} = (
-            SELECT ${accounts.user}
-            FROM ${accounts}
-            WHERE ${accounts.identifier} = ${input.identifier}
-            AND ${accounts.platform} = ${input.platform}
-        )`,
+            SELECT a.user
+            FROM ${accounts} AS a
+            WHERE a.identifier = ${input.identifier}
+              AND a.platform   = ${input.platform}
+          )`,
         with: {
-            passes: true,
+            passes: {
+                with: {
+                    community: true,
+                }
+            },
             accounts: true,
             communities: {
                 with: {

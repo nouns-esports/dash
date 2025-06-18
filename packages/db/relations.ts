@@ -60,10 +60,6 @@ export const walletRelations = relations(wallets, ({ one }) => ({
         fields: [wallets.user],
         references: [users.id],
     }),
-    escrow: one(escrows, {
-        fields: [wallets.escrow],
-        references: [escrows.id],
-    }),
     community: one(communities, {
         fields: [wallets.community],
         references: [communities.id],
@@ -74,6 +70,10 @@ export const passRelations = relations(passes, ({ one }) => ({
     user: one(users, {
         fields: [passes.user],
         references: [users.id],
+    }),
+    community: one(communities, {
+        fields: [passes.community],
+        references: [communities.id],
     }),
 }));
 

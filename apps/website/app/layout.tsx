@@ -12,6 +12,8 @@ export const metadata: Metadata = {
 	description: "Level up your community",
 };
 
+// TODO: When users get redicrected to the site from the bot add a platform query param to show the relevant signin account type
+
 export default function RootLayout(props: { children: React.ReactNode }) {
 	return (
 		<html lang="en">

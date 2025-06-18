@@ -1,5 +1,5 @@
 import { db } from "~/packages/db";
-import { accounts, communities, communityAdmins, escrows, passes, users } from "~/packages/db/schema/public";
+import { accounts, communities, communityAdmins, escrows, passes, points, users, xp } from "~/packages/db/schema/public";
 import { privyClient } from "../clients/privy";
 import { eq, sql } from "drizzle-orm";
 import type { User } from "@privy-io/server-auth";
@@ -21,7 +21,9 @@ export async function createUser(input: ({
 })) {
     let user: typeof users.$inferSelect & {
         accounts: typeof accounts.$inferSelect[];
-        passes: typeof passes.$inferSelect[];
+        passes: Array<typeof passes.$inferSelect & {
+            community: typeof communities.$inferSelect;
+        }>;
         communities: Array<typeof communityAdmins.$inferSelect & {
             community: typeof communities.$inferSelect
         }>;
@@ -76,12 +78,11 @@ export async function createUser(input: ({
             name: input.name,
             image: image.IpfsHash,
             privyId: privyUser.id,
-            createdAt: privyUser.createdAt,
         }).returning();
 
         const identifier = input.platform === "discord" ? input.subject : input.fid.toString();
 
-        await tx.insert(accounts).values({
+        const [createdAccount] = await tx.insert(accounts).values({
             identifier,
             platform: input.platform,
             user: createdUser.id,
@@ -90,13 +91,13 @@ export async function createUser(input: ({
             set: {
                 user: createdUser.id,
             },
-        })
+        }).returning();
 
-        const unclaimedEscrows = await tx.query.escrows.findMany({
-            where: eq(escrows.heir, identifier),
+        const escrow = await tx.query.escrows.findFirst({
+            where: eq(escrows.heir, createdAccount.id),
         });
 
-        for (const escrow of unclaimedEscrows) {
+        if (escrow) {
             await tx.insert(passes).values({
                 user: createdUser.id,
                 community: escrow.community,
@@ -109,12 +110,34 @@ export async function createUser(input: ({
                     xp: sql`${passes.xp} + ${escrow.xp}`,
                 },
             });
+
+            if (escrow.points > 0) {
+                await tx.insert(points).values({
+                    community: escrow.community,
+                    to: createdUser.id,
+                    amount: escrow.points,
+                });
+            }
+
+            if (escrow.xp > 0) {
+                await tx.insert(xp).values({
+                    user: createdUser.id,
+                    community: escrow.community,
+                    amount: escrow.xp,
+                });
+            }
+
+            await tx.delete(escrows).where(eq(escrows.id, escrow.id));
         }
 
         user = await tx.query.users.findFirst({
             where: eq(users.id, createdUser.id),
             with: {
-                passes: true,
+                passes: {
+                    with: {
+                        community: true,
+                    }
+                },
                 accounts: true,
                 communities: {
                     with: {
