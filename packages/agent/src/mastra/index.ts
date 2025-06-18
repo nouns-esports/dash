@@ -28,6 +28,19 @@ export const mastra = new Mastra({
             async (c, next) => {
                 const runtimeContext = c.get("runtimeContext") as RuntimeContext<DashRuntimeContext>;
 
+                const runtimeContextHeader = c.req.header("X-Runtime-Context");
+
+                if (runtimeContextHeader) {
+                    const parsed = JSON.parse(runtimeContextHeader) as DashRuntimeContext;
+                    console.log("Parsed runtime context", parsed)
+                    runtimeContext.set("platform", parsed.platform);
+                    runtimeContext.set("room", parsed.room);
+                    runtimeContext.set("community", parsed.community);
+                    runtimeContext.set("user", parsed.user);
+                    runtimeContext.set("mentions", parsed.mentions);
+                }
+
+
                 if (env.NEXT_PUBLIC_ENVIRONMENT === "dev") {
                     runtimeContext.set("community", {
                         id: "123",

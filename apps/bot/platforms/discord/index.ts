@@ -199,21 +199,21 @@ client.on("messageCreate", async (message) => {
 
         const agent = mastraClient.getAgent("dash");
 
-        // const runtimeContext: DashRuntimeContext = {
-        //     platform: "discord",
-        //     room,
-        //     community,
-        //     user,
-        //     mentions: mentionedAccounts,
-        // }
+        const runtimeContext: DashRuntimeContext = {
+            platform: "discord",
+            room,
+            community,
+            user,
+            mentions: mentionedAccounts,
+        }
 
-        const runtimeContext = new RuntimeContext<DashRuntimeContext>()
+        // const runtimeContext = new RuntimeContext<DashRuntimeContext>()
 
-        runtimeContext.set("platform", "discord");
-        runtimeContext.set("room", room);
-        runtimeContext.set("community", community);
-        runtimeContext.set("user", user);
-        runtimeContext.set("mentions", mentionedAccounts);
+        // runtimeContext.set("platform", "discord");
+        // runtimeContext.set("room", room);
+        // runtimeContext.set("community", community);
+        // runtimeContext.set("user", user);
+        // runtimeContext.set("mentions", mentionedAccounts);
 
         const response = await agent.generate({
             messages: [
@@ -228,21 +228,15 @@ client.on("messageCreate", async (message) => {
                 //     // TODO: Discord components
                 // })).describe("Any special components with the text response"),
             }),
-            runtimeContext,
             headers: {
-                "Authorization": `Bearer ${env.AGENT_TOKEN}`
+                "Authorization": `Bearer ${env.AGENT_TOKEN}`,
+                "X-Runtime-Context": JSON.stringify(runtimeContext)
             },
             memory: {
                 thread: {
                     id: randomUUID(),
                     resourceId: user.id,
-                    metadata: {
-                        platform: "discord",
-                        room,
-                        community,
-                        user,
-                        mentions: mentionedAccounts,
-                    }
+                    metadata: runtimeContext
                 },
                 resource: user.id
             }
