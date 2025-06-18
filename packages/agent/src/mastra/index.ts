@@ -22,6 +22,9 @@ export const mastra = new Mastra({
                     return new Response("Unauthorized", { status: 401 });
                 }
 
+                const runtimeContextHeader = c.req.header("X-Runtime-Context");
+                console.log("Runtime context header", runtimeContextHeader)
+
                 await next();
             },
             // Runtime Context Validation
@@ -29,6 +32,7 @@ export const mastra = new Mastra({
                 const runtimeContext = c.get("runtimeContext") as RuntimeContext<DashRuntimeContext>;
 
                 const runtimeContextHeader = c.req.header("X-Runtime-Context");
+                console.log("Runtime context header", runtimeContextHeader)
 
                 if (runtimeContextHeader) {
                     const parsed = JSON.parse(runtimeContextHeader) as DashRuntimeContext;
