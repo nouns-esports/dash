@@ -43,7 +43,7 @@ export const platforms = {
     farcaster,
 } as const;
 
-export type Platforms = keyof typeof platforms;
+export type Platforms = keyof typeof platforms | "internal";
 
 export type Connections = {
     [K in keyof typeof platforms]: {

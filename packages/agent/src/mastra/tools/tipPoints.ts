@@ -1,8 +1,8 @@
 import { z } from "zod";
 import { createTool } from "@mastra/core/tools";
-import { db } from "../../../../../packages/db";
+import { db } from "../../../../db";
 import { and, eq, sql } from "drizzle-orm";
-import { escrows, passes, points } from "../../../../../packages/db/schema/public";
+import { escrows, passes, points } from "../../../../db/schema/public";
 import type { DashRuntimeContext } from "../agents";
 
 export const tipPoints = createTool({
@@ -33,7 +33,6 @@ export const tipPoints = createTool({
             if (!pass || pass.points < context.amount) {
                 throw new Error("You do not have enough points to tip");
             }
-
 
             await tx.insert(passes).values({
                 user: user.id,

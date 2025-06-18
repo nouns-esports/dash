@@ -2,13 +2,14 @@ import { ActionRowBuilder, Client, StringSelectMenuBuilder } from "discord.js";
 import { env } from "~/env";
 import { mastraClient } from "~/packages/server/clients/mastra";
 import z from "zod";
-import { type DashRuntimeContext } from "~/packages/ai/src/mastra/agents";
+import { type DashRuntimeContext } from "~/packages/agent/src/mastra/agents";
 import { getCommunityFromServer } from "~/packages/server/queries/getCommunityFromServer";
 import { getUser } from "~/packages/server/queries/getUser";
 import { createUser } from "~/packages/server/mutations/createUser";
 import { createHash } from "crypto";
 import { getMentionedAccounts } from "~/packages/server/queries/getMentionedAccounts";
 import { createAccounts } from "~/packages/server/mutations/createAccounts";
+import { randomUUID } from "crypto";
 // import { createCommunity } from "~/packages/server/mutations/createCommunity";
 // import { getCommunity } from "~/packages/server/queries/getCommunity";
 
@@ -151,7 +152,7 @@ client.on("messageCreate", async (message) => {
             .filter((user) => user.id !== client.user?.id);
 
         const room = message.channel.isDMBased() ? `dm:${message.author.id}` : `channel:${message.channel.id}`;
-        const embeds: string[] = [];
+        // const embeds: string[] = [];
 
         if (!message.guild?.id) {
             return message.reply("Sorry, I can only reply in servers right now.");
@@ -196,7 +197,6 @@ client.on("messageCreate", async (message) => {
 
         const agent = mastraClient.getAgent("dash");
 
-        // TODO: Add mentions to runtime context
         const runtimeContext: DashRuntimeContext = {
             platform: "discord",
             room,
@@ -222,7 +222,14 @@ client.on("messageCreate", async (message) => {
             headers: {
                 "Authorization": `Bearer ${env.AGENT_TOKEN}`
             },
-            resourceId: user.id,
+            memory: {
+                thread: {
+                    id: randomUUID(),
+                    resourceId: user.id,
+                    metadata: runtimeContext
+                },
+                resource: user.id
+            }
         });
 
         message.reply(response.object.text);

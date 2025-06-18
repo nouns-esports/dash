@@ -2,7 +2,7 @@ import { sql } from "drizzle-orm";
 import { check, index, pgTable, text, uniqueIndex } from "drizzle-orm/pg-core";
 import type { Platforms, Connections } from "../../platforms";
 
-const platforms = () => text().$type<Platforms>();
+const platforms = () => text().$type<Exclude<Platforms, "internal">>();
 const connections = () => text().$type<Connections>();
 
 export const communities = pgTable("communities", (t) => ({
@@ -86,7 +86,9 @@ export const accounts = pgTable("accounts", (t) => ({
     // Discord user id, Farcaster FID, Twitter user id, etc.
     identifier: t.text().notNull(),
     user: t.uuid(),
-}));
+}), (t) => [
+    uniqueIndex("accounts_platform_identifier_unique").on(t.platform, t.identifier),
+]);
 
 export const passes = pgTable("passes", (t) => ({
     id: t.uuid().primaryKey().defaultRandom(),
