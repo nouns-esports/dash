@@ -36,10 +36,10 @@ export const communities = pgTable("communities", (t) => ({
         prompt: string;
     }>(),
     // DEPRECATED
-    deprecated_description: t.jsonb(),
+    deprecated_description: t.jsonb("description"),
     deprecated_parentUrl: t.text("parent_url"),
-    deprecated_details: t.jsonb(),
-    deprecated_featured: t.boolean().notNull().default(false),
+    deprecated_details: t.jsonb("details"),
+    deprecated_featured: t.boolean("featured").notNull().default(false),
 }));
 
 export const communityAdmins = pgTable("community_admins", (t) => ({
@@ -64,10 +64,10 @@ export const users = pgTable("users", (t) => ({
     image: t.text().notNull(),
     canRecieveEmails: t.boolean("can_recieve_emails").notNull().default(false),
     // DEPRECATED
-    deprecated_bio: t.text(),
-    deprecated_twitter: t.text(),
-    deprecated_discord: t.text(),
-    deprecated_fid: t.integer(),
+    deprecated_bio: t.text("bio"),
+    deprecated_twitter: t.text("twitter"),
+    deprecated_discord: t.text("discord"),
+    deprecated_fid: t.integer("fid"),
 }));
 
 export const wallets = pgTable("wallets", (t) => ({
