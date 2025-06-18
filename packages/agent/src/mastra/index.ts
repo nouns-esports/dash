@@ -64,6 +64,15 @@ export const mastra = new Mastra({
                     runtimeContext.set("mentions", []);
                 }
 
+                console.log("---TEST-----------------------------")
+                console.log(runtimeContext)
+                console.log(runtimeContext.get("platform"))
+                console.log(runtimeContext.get("user"))
+                console.log(runtimeContext.get("room"))
+                console.log(runtimeContext.get("mentions"))
+                console.log(runtimeContext.get("community"))
+                console.log("------------------------------------")
+
 
                 if (!runtimeContext.get("platform") || !Object.keys(platforms).includes(runtimeContext.get("platform")) || !runtimeContext.get("user")) {
                     return new Response("Bad Request", { status: 400 });

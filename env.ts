@@ -1,6 +1,7 @@
 import { createEnv } from "@t3-oss/env-nextjs";
 import { z } from "zod";
 
+// Remember to update turbo.json -> globalEnv when adding new env variables
 export const env = createEnv({
     emptyStringAsUndefined: true,
     server: {
