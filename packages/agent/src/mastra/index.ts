@@ -17,6 +17,7 @@ export const mastra = new Mastra({
                 }
 
                 const authHeader = c.req.header("Authorization");
+                console.log("Auth header", authHeader)
 
                 if (!authHeader || authHeader !== `Bearer ${env.AGENT_TOKEN}`) {
                     return new Response("Unauthorized", { status: 401 });

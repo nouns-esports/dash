@@ -229,9 +229,12 @@ client.on("messageCreate", async (message) => {
                 // })).describe("Any special components with the text response"),
             }),
             headers: {
-                "Authorization": `Bearer ${env.AGENT_TOKEN}`,
-                "X-Runtime-Context": JSON.stringify(runtimeContext)
+                "Authorization": `Bearer ${env.AGENT_TOKEN}`
             },
+            // headers: {
+            //     "Authorization": `Bearer ${env.AGENT_TOKEN}`,
+            //     "X-Runtime-Context": JSON.stringify(runtimeContext)
+            // },
             memory: {
                 thread: {
                     id: randomUUID(),
