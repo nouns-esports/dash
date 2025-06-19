@@ -17,14 +17,10 @@ export const mastra = new Mastra({
                 }
 
                 const authHeader = c.req.header("Authorization");
-                console.log("Auth header", authHeader)
 
                 if (!authHeader || authHeader !== `Bearer ${env.AGENT_TOKEN}`) {
                     return new Response("Unauthorized", { status: 401 });
                 }
-
-                const runtimeContextHeader = c.req.header("X-Runtime-Context");
-                console.log("Runtime context header", runtimeContextHeader)
 
                 await next();
             },
@@ -36,7 +32,7 @@ export const mastra = new Mastra({
                 console.log("Runtime context header", runtimeContextHeader)
 
                 if (runtimeContextHeader) {
-                    const parsed = JSON.parse(runtimeContextHeader) as DashRuntimeContext;
+                    const parsed = JSON.parse(Buffer.from(runtimeContextHeader, 'base64').toString('utf8')) as DashRuntimeContext;
                     console.log("Parsed runtime context", parsed)
                     runtimeContext.set("platform", parsed.platform);
                     runtimeContext.set("room", parsed.room);

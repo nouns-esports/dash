@@ -6,6 +6,6 @@ export const mastraClient = (runtimeContext: DashRuntimeContext) => new MastraCl
     baseUrl: env.MASTRA_SERVER,
     headers: {
         "Authorization": `Bearer ${env.AGENT_TOKEN}`,
-        "X-Runtime-Context": JSON.stringify(runtimeContext)
+        "X-Runtime-Context": Buffer.from(JSON.stringify(runtimeContext), 'utf8').toString('base64')
     }
 });
