@@ -66,7 +66,7 @@
     "packages/server": {
       "name": "clients",
       "dependencies": {
-        "@mastra/client-js": "^0.10.5",
+        "@mastra/client-js": "0.10.5",
         "@privy-io/server-auth": "^1.22.2",
         "pinata-web3": "^0.5.4",
       },

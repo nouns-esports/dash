@@ -197,8 +197,6 @@ client.on("messageCreate", async (message) => {
             });
         }
 
-        const agent = mastraClient.getAgent("dash");
-
         const runtimeContext: DashRuntimeContext = {
             platform: "discord",
             room,
@@ -206,6 +204,9 @@ client.on("messageCreate", async (message) => {
             user,
             mentions: mentionedAccounts,
         }
+
+        const agent = mastraClient(runtimeContext).getAgent("dash");
+
 
         // const runtimeContext = new RuntimeContext<DashRuntimeContext>()
 
