@@ -13,12 +13,15 @@ export const tipPoints = createTool({
     }),
     outputSchema: z.boolean().describe("Whether the points were tipped successfully"),
     execute: async ({ context, runtimeContext }) => {
+
         await db.primary.transaction(async (tx) => {
             const user = runtimeContext.get("user") as DashRuntimeContext["user"];
             const community = runtimeContext.get("community") as DashRuntimeContext["community"];
             const mentions = runtimeContext.get("mentions") as DashRuntimeContext["mentions"];
 
             const mention = mentions[0];
+
+            console.log("Tiping points", `Amount: ${context.amount}`, `User: ${user.id}`, `Community: ${community?.id ?? "null"}`, `Mention: ${mention?.id ?? "null"}`)
 
             if (!mention) {
                 throw new Error("You must mention a user to tip points to");

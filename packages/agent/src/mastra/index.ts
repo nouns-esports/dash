@@ -29,11 +29,9 @@ export const mastra = new Mastra({
                 const runtimeContext = c.get("runtimeContext") as RuntimeContext<DashRuntimeContext>;
 
                 const runtimeContextHeader = c.req.header("X-Runtime-Context");
-                console.log("Runtime context header", runtimeContextHeader)
 
                 if (runtimeContextHeader) {
                     const parsed = JSON.parse(Buffer.from(runtimeContextHeader, 'base64').toString('utf8')) as DashRuntimeContext;
-                    console.log("Parsed runtime context", parsed)
                     runtimeContext.set("platform", parsed.platform);
                     runtimeContext.set("room", parsed.room);
                     runtimeContext.set("community", parsed.community);
@@ -77,16 +75,6 @@ export const mastra = new Mastra({
                     runtimeContext.set("room", "123");
                     runtimeContext.set("mentions", []);
                 }
-
-                console.log("---TEST-----------------------------")
-                console.log(runtimeContext)
-                console.log(runtimeContext.get("platform"))
-                console.log(runtimeContext.get("user"))
-                console.log(runtimeContext.get("room"))
-                console.log(runtimeContext.get("mentions"))
-                console.log(runtimeContext.get("community"))
-                console.log("------------------------------------")
-
 
                 if (!runtimeContext.get("platform") || !Object.keys(platforms).includes(runtimeContext.get("platform")) || !runtimeContext.get("user")) {
                     return new Response("Bad Request", { status: 400 });
