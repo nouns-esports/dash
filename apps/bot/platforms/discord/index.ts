@@ -228,9 +228,9 @@ client.on("messageCreate", async (message) => {
                 //     // TODO: Discord components
                 // })).describe("Any special components with the text response"),
             }),
-            headers: {
-                "Authorization": `Bearer ${env.AGENT_TOKEN}`
-            },
+            // headers: {
+            //     "Authorization": `Bearer ${env.AGENT_TOKEN}`
+            // },
             // headers: {
             //     "Authorization": `Bearer ${env.AGENT_TOKEN}`,
             //     "X-Runtime-Context": JSON.stringify(runtimeContext)
