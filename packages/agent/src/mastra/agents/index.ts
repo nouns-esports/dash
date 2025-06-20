@@ -93,6 +93,10 @@ export const dash = new Agent({
         const community = runtimeContext.get("community") as DashRuntimeContext["community"];
         const platform = runtimeContext.get("platform") as DashRuntimeContext["platform"];
 
+        console.log("TOOLS: Runtime Context", runtimeContext)
+        console.log("TOOLS: Community", community)
+        console.log("TOOLS: Platform", platform)
+
         if (platform === "internal") {
             return {}
         }
