@@ -6,8 +6,8 @@ import { escrows, passes, points } from "../../../../db/schema/public";
 import type { DashRuntimeContext } from "../agents";
 
 export const tipPoints = createTool({
-    id: "internal:tipPoints",
-    description: "Tip points to another user in the same community",
+    id: "dash:tipPoints",
+    description: "Send or tip points to another user in the same community",
     inputSchema: z.object({
         amount: z.number().describe("The number of points to tip"),
     }),
@@ -21,9 +21,7 @@ export const tipPoints = createTool({
 
             const mention = mentions[0];
 
-
             console.log("Tiping points", `Amount: ${context.amount}`, `User: ${user.id}`, `Community: ${community?.id ?? "null"}`, `Mention: ${mention?.id ?? "null"}`)
-            console.log("Runtime context", runtimeContext)
 
             if (!mention) {
                 throw new Error("You must mention a user to tip points to");

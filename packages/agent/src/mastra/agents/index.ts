@@ -76,7 +76,7 @@ export const dash = new Agent({
           COMMUNITY CONTEXT:
           ${platform !== "internal" ? `You are responding to a message on the ${platform} platform.` : ""}
           ${community ? `The relevant community is ${community.name}.` : ""}
-          ${community?.points ? `The community's points system is called ${community.points.name}.` : "The community has not set up a points system yet."}
+          ${community?.points ? `The community's points system is called ${community.points.name}. ${community.points.name.toLowerCase() === "points" ? "" : `When someone `}` : "The community has not set up a points system yet."}
 
           USER CONTEXT:
           ${user ? `The user you are talking to is ${user.name}.` : ""}
@@ -92,10 +92,6 @@ export const dash = new Agent({
     tools: async ({ runtimeContext }) => {
         const community = runtimeContext.get("community") as DashRuntimeContext["community"];
         const platform = runtimeContext.get("platform") as DashRuntimeContext["platform"];
-
-        console.log("TOOLS: Runtime Context", runtimeContext)
-        console.log("TOOLS: Community", community)
-        console.log("TOOLS: Platform", platform)
 
         if (platform === "internal") {
             return {}
