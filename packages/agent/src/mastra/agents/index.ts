@@ -89,33 +89,35 @@ export const dash = new Agent({
           ${mentions.length > 0 && platform !== "internal" ? `The user mentioned the following ${platform} accounts ${mentions.map((mention) => mention.id).join(", ")} in the message.` : ""}
           `
     },
-    tools: async ({ runtimeContext }) => {
-        const community = runtimeContext.get("community") as DashRuntimeContext["community"];
-        const platform = runtimeContext.get("platform") as DashRuntimeContext["platform"];
-
-        if (platform === "internal") {
-            return {}
-        }
-
-        const availableTools: Record<string, ReturnType<typeof createTool>> = {
-            tipPoints,
-        }
-
-        if (!community) {
-            return availableTools
-        }
-
-        for (const connection of community.connections) {
-
-            const platform = platforms[connection.platform]
-
-            for (const [id, tool] of Object.entries(platform.tools)) {
-                availableTools[id] = tool as ReturnType<typeof createTool>
-            }
-        }
-        console.log("Available tools", availableTools)
-
-        return availableTools
+    tools: {
+        tipPoints,
     },
+    // tools: async ({ runtimeContext }) => {
+    //     const community = runtimeContext.get("community") as DashRuntimeContext["community"];
+    //     const platform = runtimeContext.get("platform") as DashRuntimeContext["platform"];
+
+    //     if (platform === "internal") {
+    //         return {}
+    //     }
+
+    //     const availableTools: Record<string, ReturnType<typeof createTool>> = {
+    //         tipPoints,
+    //     }
+
+    //     if (!community) {
+    //         return availableTools
+    //     }
+
+    //     for (const connection of community.connections) {
+
+    //         const platform = platforms[connection.platform]
+
+    //         for (const [id, tool] of Object.entries(platform.tools)) {
+    //             availableTools[id] = tool as ReturnType<typeof createTool>
+    //         }
+    //     }
+
+    //     return availableTools
+    // },
     memory
 })
