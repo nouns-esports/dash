@@ -1,7 +1,7 @@
 import { db } from "~/packages/db";
 import { accounts, communities, communityAdmins, escrows, passes, points, users, xp } from "~/packages/db/schema/public";
 import { privyClient } from "../clients/privy";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import type { User } from "@privy-io/server-auth";
 import { pinataClient } from "../clients/pinata";
 
@@ -94,7 +94,7 @@ export async function createUser(input: ({
         }).returning();
 
         const escrow = await tx.query.escrows.findFirst({
-            where: eq(escrows.heir, createdAccount.id),
+            where: and(eq(escrows.heir, createdAccount.id), eq(escrows.claimed, false)),
         });
 
         if (escrow) {
@@ -114,6 +114,7 @@ export async function createUser(input: ({
             if (escrow.points > 0) {
                 await tx.insert(points).values({
                     community: escrow.community,
+                    fromEscrow: escrow.id,
                     to: createdUser.id,
                     amount: escrow.points,
                 });
@@ -127,7 +128,9 @@ export async function createUser(input: ({
                 });
             }
 
-            await tx.delete(escrows).where(eq(escrows.id, escrow.id));
+            await tx.update(escrows).set({
+                claimed: true,
+            }).where(eq(escrows.id, escrow.id));
         }
 
         user = await tx.query.users.findFirst({

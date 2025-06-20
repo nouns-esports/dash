@@ -116,6 +116,7 @@ export const escrows = pgTable("escrows", (t) => ({
     community: t.uuid().notNull(),
     points: t.numeric({ precision: 38, scale: 18, mode: "number" }).notNull().default(0),
     xp: t.bigint({ mode: "number" }).notNull().default(0),
+    claimed: t.boolean().notNull().default(false),
 }));
 
 export const xp = pgTable("xp", (t) => ({
@@ -142,7 +143,9 @@ export const points = pgTable("points", (t) => ({
     community: t.uuid().notNull(),
     amount: t.numeric({ precision: 38, scale: 18, mode: "number" }).notNull(),
     from: t.uuid(),
+    fromEscrow: t.uuid(),
     to: t.uuid(),
+    toEscrow: t.uuid(),
     timestamp: t.timestamp().notNull().defaultNow(),
     // Think
     order: t.text(),
@@ -154,7 +157,15 @@ export const points = pgTable("points", (t) => ({
     check(
         "from_or_to_exists",
         sql`("from" IS NOT NULL OR "to" IS NOT NULL)`
-    )
+    ),
+    check(
+        "from_and_fromEscrow_not_both_present",
+        sql`NOT ("from" IS NOT NULL AND "fromEscrow" IS NOT NULL)`
+    ),
+    check(
+        "to_and_toEscrow_not_both_present",
+        sql`NOT ("to" IS NOT NULL AND "toEscrow" IS NOT NULL)`
+    ),
 ]);
 
 // On frontend, use difficulty levels to determine xp and points to ensure consistency

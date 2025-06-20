@@ -13,7 +13,7 @@ import { getLevel } from "~/packages/server/utils/getLevel";
 
 // When update this type, remember to migrate any existing thread metadata on mastra.mastra_threads.metadata
 export type DashRuntimeContext = {
-    platform: Platforms;
+    platform?: Platforms;
     community?: typeof communities.$inferSelect & {
         connections: typeof communityConnections.$inferSelect[];
         boosts: number;
@@ -74,7 +74,7 @@ export const dash = new Agent({
           Do not say things unless you know them to be true / have the capability to act on the request given the tools and information you have been provided.
  
           COMMUNITY CONTEXT:
-          ${platform !== "internal" ? `You are responding to a message on the ${platform} platform.` : ""}
+          ${platform ? `You are responding to a message on the ${platform} platform.` : ""}
           ${community ? `The relevant community is ${community.name}.` : ""}
           ${community?.points ? `The community's points system is called ${community.points.name}. ${community.points.name.toLowerCase() === "points" ? "" : `When the user mentions the term "${community.points.name}" they are referring to "points" in the context of executing tools, fetching balances, etc.`}` : "The community has not set up a points system yet."}
 
@@ -86,16 +86,11 @@ export const dash = new Agent({
           ${user.passes.length > 0 ? `The user has the following xp levels in each community: ${user.passes.map((pass) => `\n${pass.community.name}: ${pass.xp} xp / level ${getLevel({ xp: pass.xp, config: pass.community.levels }).currentLevel}`).join(", ")}.` : ""}
         
           MESSAGE CONTEXT:
-          ${mentions.length > 0 && platform !== "internal" ? `The user mentioned the following ${platform} accounts ${mentions.map((mention) => mention.id).join(", ")} in the message.` : ""}
+          ${mentions.length > 0 && platform ? `The user mentioned the following ${platform} accounts ${mentions.map((mention) => mention.id).join(", ")} in the message.` : ""}
           `
     },
     tools: async ({ runtimeContext }) => {
         const community = runtimeContext.get("community") as DashRuntimeContext["community"];
-        const platform = runtimeContext.get("platform") as DashRuntimeContext["platform"];
-
-        if (platform === "internal") {
-            return {}
-        }
 
         const availableTools: Record<string, ReturnType<typeof createTool>> = {
             tipPoints,

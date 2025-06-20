@@ -11,7 +11,7 @@ export async function createCommunity(input: {
     user: string;
 } & ({
     platform: "discord";
-    connection: "server";
+    connection: "discord:server";
     config: z.infer<typeof platforms.discord["connections"]["server"]["config"]>;
 })) {
     let community: typeof communities.$inferSelect & {
@@ -31,6 +31,7 @@ export async function createCommunity(input: {
         await tx.insert(communityAdmins).values({
             community: createdCommunity.id,
             user: input.user,
+            owner: true,
         });
 
         await tx.insert(communityConnections).values({
