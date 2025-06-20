@@ -3,6 +3,7 @@ import { dash, type DashRuntimeContext } from './agents';
 import { env } from '../../../../env';
 import { platforms } from '../../../platforms';
 import type { RuntimeContext } from '@mastra/core/runtime-context';
+import { PinoLogger } from "@mastra/loggers";
 
 export const mastra = new Mastra({
     agents: {
@@ -83,5 +84,9 @@ export const mastra = new Mastra({
                 await next();
             },
         ]
-    }
-})        
+    },
+    logger: new PinoLogger({
+        level: "debug",
+        name: "mastra",
+    }),
+})
