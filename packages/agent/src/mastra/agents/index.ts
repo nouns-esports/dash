@@ -113,6 +113,7 @@ export const dash = new Agent({
                 availableTools[id] = tool as ReturnType<typeof createTool>
             }
         }
+        console.log("Available tools", availableTools)
 
         return availableTools
     },
