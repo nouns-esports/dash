@@ -223,7 +223,7 @@ client.on("messageCreate", async (message) => {
                     content: message.content,
                 }
             ],
-            output: z.object({
+            experimental_output: z.object({
                 text: z.string().describe("The text response to the user's message"),
                 // components: z.array(z.object({
                 //     // TODO: Discord components
