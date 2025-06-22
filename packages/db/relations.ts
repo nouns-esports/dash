@@ -1,5 +1,19 @@
 import { relations } from "drizzle-orm";
-import { accounts, communities, communityAdmins, communityConnections, escrows, passes, points, users, wallets, xp } from "./schema/public";
+import {
+    accounts,
+    communities,
+    communityAdmins,
+    communityConnections,
+    escrows,
+    passes,
+    points,
+    questActions,
+    questCompletions,
+    quests,
+    users,
+    wallets,
+    xp,
+} from "./schema/public";
 
 export const communityRelations = relations(communities, ({ many }) => ({
     connections: many(communityConnections),
@@ -77,7 +91,6 @@ export const passRelations = relations(passes, ({ one }) => ({
     }),
 }));
 
-
 export const pointsRelations = relations(points, ({ one }) => ({
     from: one(users, {
         fields: [points.from],
@@ -101,5 +114,37 @@ export const xpRelations = relations(xp, ({ one }) => ({
     community: one(communities, {
         fields: [xp.community],
         references: [communities.id],
+    }),
+    quest: one(quests, {
+        fields: [xp.quest],
+        references: [quests.id],
+    }),
+}));
+
+export const questRelations = relations(quests, ({ one, many }) => ({
+    community: one(communities, {
+        fields: [quests.community],
+        references: [communities.id],
+    }),
+    // event: one(events, {
+    //     fields: [quests.event],
+    //     references: [events.id],
+    // }),
+    completions: many(questCompletions),
+    actions: many(questActions),
+    xpRecords: many(xp),
+}));
+
+export const questCompletionsRelations = relations(questCompletions, ({ one }) => ({
+    quest: one(quests, {
+        fields: [questCompletions.quest],
+        references: [quests.id],
+    }),
+}));
+
+export const questActionsRelations = relations(questActions, ({ one }) => ({
+    quest: one(quests, {
+        fields: [questActions.quest],
+        references: [quests.id],
     }),
 }));

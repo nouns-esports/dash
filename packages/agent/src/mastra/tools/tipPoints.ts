@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { createTool } from "@mastra/core/tools";
 import { db } from "../../../../db";
-import { and, eq, sql } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 import { escrows, passes, points } from "../../../../db/schema/public";
 import type { DashRuntimeContext } from "../agents";
 
@@ -13,7 +13,6 @@ export const tipPoints = createTool({
     }),
     outputSchema: z.boolean().describe("Whether the points were tipped successfully"),
     execute: async ({ context, runtimeContext }) => {
-
         await db.primary.transaction(async (tx) => {
             const user = runtimeContext.get("user") as DashRuntimeContext["user"];
             const community = runtimeContext.get("community") as DashRuntimeContext["community"];
@@ -35,27 +34,33 @@ export const tipPoints = createTool({
                 throw new Error("You do not have enough points to tip");
             }
 
-            await tx.insert(passes).values({
-                user: user.id,
-                community: community.id,
-            }).onConflictDoUpdate({
-                target: [passes.user, passes.community],
-                set: {
-                    points: sql`${passes.points} - ${context.amount}`,
-                },
-            });
-
-            if (mention.user) {
-                await tx.insert(passes).values({
-                    user: mention.user.id,
+            await tx
+                .insert(passes)
+                .values({
+                    user: user.id,
                     community: community.id,
-                    points: context.amount,
-                }).onConflictDoUpdate({
+                })
+                .onConflictDoUpdate({
                     target: [passes.user, passes.community],
                     set: {
-                        points: sql`${passes.points} + ${context.amount}`,
+                        points: sql`${passes.points} - ${context.amount}`,
                     },
                 });
+
+            if (mention.user) {
+                await tx
+                    .insert(passes)
+                    .values({
+                        user: mention.user.id,
+                        community: community.id,
+                        points: context.amount,
+                    })
+                    .onConflictDoUpdate({
+                        target: [passes.user, passes.community],
+                        set: {
+                            points: sql`${passes.points} + ${context.amount}`,
+                        },
+                    });
 
                 await tx.insert(points).values({
                     community: community.id,
@@ -64,20 +69,22 @@ export const tipPoints = createTool({
                     amount: context.amount,
                 });
             } else {
-                await tx.insert(escrows).values({
-                    community: community.id,
-                    heir: mention.id,
-                    points: context.amount,
-                }).onConflictDoUpdate({
-                    target: [escrows.community, escrows.heir],
-                    set: {
-                        points: sql`${escrows.points} + ${context.amount}`,
-                    },
-                });
+                await tx
+                    .insert(escrows)
+                    .values({
+                        community: community.id,
+                        heir: mention.id,
+                        points: context.amount,
+                    })
+                    .onConflictDoUpdate({
+                        target: [escrows.community, escrows.heir],
+                        set: {
+                            points: sql`${escrows.points} + ${context.amount}`,
+                        },
+                    });
             }
         });
 
-        return true
-    }
-})
-
+        return true;
+    },
+});

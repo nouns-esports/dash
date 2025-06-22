@@ -10,23 +10,15 @@ import { createHash } from "crypto";
 import { getMentionedAccounts } from "~/packages/server/queries/getMentionedAccounts";
 import { createAccounts } from "~/packages/server/mutations/createAccounts";
 import { randomUUID } from "crypto";
-import { RuntimeContext } from '@mastra/core/runtime-context';
+import { RuntimeContext } from "@mastra/core/runtime-context";
+import { Row } from "./components/row";
+import { Button } from "./components/button";
+import type { Select } from "./components/select";
+import type { Embed } from "./components/embed";
+import { QuestEmbed } from "./embeds/quest";
 
 // import { createCommunity } from "~/packages/server/mutations/createCommunity";
 // import { getCommunity } from "~/packages/server/queries/getCommunity";
-
-
-// function createInteraction(input: {
-//     id: string;
-//     components: any;
-//     guild: string;
-// }) {
-//     return {
-//         id: input.id,
-//         components: input.components,
-//         guild: input.guild,
-//     }
-// }
 
 const client = new Client({
     intents: ["Guilds", "GuildMessages", "MessageContent", "GuildMembers"],
@@ -99,39 +91,37 @@ client.on("ready", () => {
 // });
 
 // client.on("interactionCreate", async (interaction) => {
-//     if (interaction.isStringSelectMenu() && interaction.id.startsWith("community-select")) {
-//         await interaction.deferReply();
+// if (interaction.isStringSelectMenu() && interaction.id.startsWith("community-select")) {
+//     await interaction.deferReply();
 
-//         const selectedCommunity = interaction.values[0];
-//         const [_, userId, guildId] = interaction.id.split(":");
+//     const selectedCommunity = interaction.values[0];
+//     const [_, userId, guildId] = interaction.id.split(":");
 
-//         const guild = await client.guilds.fetch(guildId);
+//     const guild = await client.guilds.fetch(guildId);
 
-//         if (selectedCommunity === "new") {
-//             await createCommunity({
-//                 platform: "discord",
-//                 connection: "server",
-//                 name: guild.name,
-//                 image: guild.iconURL() ?? "",
-//                 user: userId,
-//                 config: {
-//                     guild: guildId,
-//                 },
-//             })
-//         }
-
-//         else {
-//             await getCommunity({
-//                 id: selectedCommunity,
-//             });
-//         }
-
-
-
-//         await interaction.reply({
-//             content: `Successfully linked ${guild.name}`,
+//     if (selectedCommunity === "new") {
+//         await createCommunity({
+//             platform: "discord",
+//             connection: "server",
+//             name: guild.name,
+//             image: guild.iconURL() ?? "",
+//             user: userId,
+//             config: {
+//                 guild: guildId,
+//             },
 //         })
 //     }
+
+//     else {
+//         await getCommunity({
+//             id: selectedCommunity,
+//         });
+//     }
+
+//     await interaction.reply({
+//         content: `Successfully linked ${guild.name}`,
+//     })
+// }
 // });
 
 client.on("messageCreate", async (message) => {
@@ -146,14 +136,17 @@ client.on("messageCreate", async (message) => {
             message: message.content,
             channel: message.channel.id,
             guild: message.guild?.id ?? null,
-        })
+        });
 
         await message.channel.sendTyping();
 
-        const mentions = Array.from(message.mentions.users.values())
-            .filter((user) => user.id !== client.user?.id);
+        const mentions = Array.from(message.mentions.users.values()).filter(
+            (user) => user.id !== client.user?.id,
+        );
 
-        const room = message.channel.isDMBased() ? `dm:${message.author.id}` : `channel:${message.channel.id}`;
+        const room = message.channel.isDMBased()
+            ? `dm:${message.author.id}`
+            : `channel:${message.channel.id}`;
         // const embeds: string[] = [];
 
         if (!message.guild?.id) {
@@ -165,7 +158,9 @@ client.on("messageCreate", async (message) => {
         });
 
         if (!community) {
-            return message.reply("Community not found, please reach out to the server owner to finish setting up Dash.");
+            return message.reply(
+                "Community not found, please reach out to the server owner to finish setting up Dash.",
+            );
         }
 
         let user = await getUser({
@@ -188,7 +183,9 @@ client.on("messageCreate", async (message) => {
             platform: "discord",
         });
 
-        const missingAccounts = mentions.filter((mention) => !mentionedAccounts.find((account) => account.identifier === mention.id));
+        const missingAccounts = mentions.filter(
+            (mention) => !mentionedAccounts.find((account) => account.identifier === mention.id),
+        );
 
         if (missingAccounts.length > 0) {
             mentionedAccounts = await createAccounts({
@@ -203,10 +200,9 @@ client.on("messageCreate", async (message) => {
             community,
             user,
             mentions: mentionedAccounts,
-        }
+        };
 
         const agent = mastraClient(runtimeContext).getAgent("dash");
-
 
         // const runtimeContext = new RuntimeContext<DashRuntimeContext>()
 
@@ -221,32 +217,65 @@ client.on("messageCreate", async (message) => {
                 {
                     role: "user",
                     content: message.content,
-                }
+                },
             ],
             experimental_output: z.object({
                 text: z.string().describe("The text response to the user's message"),
-                // components: z.array(z.object({
-                //     // TODO: Discord components
-                // })).describe("Any special components with the text response"),
+                quests: z
+                    .object({
+                        id: z.string().describe("The id of the quest"),
+                        name: z.string().describe("The name of the quest"),
+                        description: z.string().describe("The description of the quest"),
+                        image: z.string().describe("The image of the quest"),
+                        xp: z.number().describe("Amount of xp awarded for completing the quest"),
+                        points: z
+                            .number()
+                            .describe("Amount of points awarded for completing the quest"),
+                        pointsLabel: z.string().describe("The community's points name"),
+                    })
+                    .array()
+                    .optional()
+                    .describe(
+                        "An array of quests if requested / relevant to this response from the getQuests tool call",
+                    ),
             }),
-            // headers: {
-            //     "Authorization": `Bearer ${env.AGENT_TOKEN}`
-            // },
-            // headers: {
-            //     "Authorization": `Bearer ${env.AGENT_TOKEN}`,
-            //     "X-Runtime-Context": JSON.stringify(runtimeContext)
-            // },
             memory: {
                 thread: {
                     id: randomUUID(),
                     resourceId: user.id,
-                    metadata: runtimeContext
+                    metadata: runtimeContext,
                 },
-                resource: user.id
-            }
+                resource: user.id,
+            },
         });
 
-        message.reply(response.object.text);
+        // TODO: Standardize quest responses with embeds concept making a quest a single embed type like url, image, or video
+        // TODO: Parse the user prompt embeds for nouns.gg or dash urls that might contain embeds like quests or predictions and auto converted into their respective components
+        const components: Array<ReturnType<typeof Row>> = [];
+        const embeds: Array<ReturnType<typeof Embed>> = [];
+
+        if (response.object.quests) {
+            embeds.push(...response.object.quests.map((quest) => QuestEmbed({ quest })));
+
+            if (response.object.quests.length === 1) {
+                const quest = response.object.quests[0];
+
+                components.push(
+                    Row([
+                        Button({
+                            label: "View",
+                            type: "link",
+                            url: `https://nouns.gg/quests/${quest.id}`,
+                        }),
+                    ]),
+                );
+            }
+        }
+
+        message.reply({
+            content: response.object.text,
+            components: components.map((component) => component.toJSON()),
+        });
     } catch (error) {
         const digest = createHash("sha256").update(JSON.stringify(error)).digest("hex");
         console.error(`Error: ${digest}`, error);
