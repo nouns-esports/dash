@@ -200,7 +200,7 @@ export const quests = pgTable(
         community: t.uuid().notNull(),
         event: t.uuid(),
         draft: t.boolean().notNull().default(true),
-        createdAt: t.timestamp().notNull().defaultNow(),
+        createdAt: t.timestamp("created_at").notNull().defaultNow(),
         active: t.boolean().notNull().default(false),
         xp: t.bigint({ mode: "number" }).notNull(),
         points: t.bigint({ mode: "number" }).notNull(),
