@@ -233,6 +233,15 @@ client.on("messageCreate", async (message) => {
                             .describe("Amount of points awarded for completing the quest"),
                         pointsLabel: z.string().describe("The community's points name"),
                     })
+                    .required({
+                        id: true,
+                        name: true,
+                        description: true,
+                        image: true,
+                        xp: true,
+                        points: true,
+                        pointsLabel: true,
+                    })
                     .array()
                     .optional()
                     .describe(
