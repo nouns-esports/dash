@@ -291,6 +291,7 @@ client.on("messageCreate", async (message) => {
         message.reply({
             content: response.object.text,
             components: components.map((component) => component.toJSON()),
+            embeds: embeds.map((embed) => embed.toJSON()),
         });
     } catch (error) {
         const digest = createHash("sha256").update(JSON.stringify(error)).digest("hex");
