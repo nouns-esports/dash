@@ -253,6 +253,7 @@ client.on("messageCreate", async (message) => {
                 })
                 .required({
                     text: true,
+                    quests: true,
                 }),
             memory: {
                 thread: {
