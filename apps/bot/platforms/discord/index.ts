@@ -219,35 +219,41 @@ client.on("messageCreate", async (message) => {
                     content: message.content,
                 },
             ],
-            experimental_output: z.object({
-                text: z.string().describe("The text response to the user's message"),
-                quests: z
-                    .object({
-                        id: z.string().describe("The id of the quest"),
-                        name: z.string().describe("The name of the quest"),
-                        description: z.string().describe("The description of the quest"),
-                        image: z.string().describe("The image of the quest"),
-                        xp: z.number().describe("Amount of xp awarded for completing the quest"),
-                        points: z
-                            .number()
-                            .describe("Amount of points awarded for completing the quest"),
-                        pointsLabel: z.string().describe("The community's points name"),
-                    })
-                    .required({
-                        id: true,
-                        name: true,
-                        description: true,
-                        image: true,
-                        xp: true,
-                        points: true,
-                        pointsLabel: true,
-                    })
-                    .array()
-                    .optional()
-                    .describe(
-                        "An array of quests if requested / relevant to this response from the getQuests tool call",
-                    ),
-            }),
+            experimental_output: z
+                .object({
+                    text: z.string().describe("The text response to the user's message"),
+                    quests: z
+                        .object({
+                            id: z.string().describe("The id of the quest"),
+                            name: z.string().describe("The name of the quest"),
+                            description: z.string().describe("The description of the quest"),
+                            image: z.string().describe("The image of the quest"),
+                            xp: z
+                                .number()
+                                .describe("Amount of xp awarded for completing the quest"),
+                            points: z
+                                .number()
+                                .describe("Amount of points awarded for completing the quest"),
+                            pointsLabel: z.string().describe("The community's points name"),
+                        })
+                        .required({
+                            id: true,
+                            name: true,
+                            description: true,
+                            image: true,
+                            xp: true,
+                            points: true,
+                            pointsLabel: true,
+                        })
+                        .array()
+                        .optional()
+                        .describe(
+                            "An array of quests if requested / relevant to this response from the getQuests tool call",
+                        ),
+                })
+                .required({
+                    text: true,
+                }),
             memory: {
                 thread: {
                     id: randomUUID(),
