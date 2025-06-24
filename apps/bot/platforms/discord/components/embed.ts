@@ -5,6 +5,9 @@ export function Embed(props: {
     description?: string;
     image?: string;
     url?: string;
+    footer?: {
+        text: string;
+    };
 }) {
     const embed = new EmbedBuilder();
 
@@ -12,6 +15,7 @@ export function Embed(props: {
     if (props.description) embed.setDescription(props.description);
     if (props.image) embed.setImage(props.image);
     if (props.url) embed.setURL(props.url);
+    if (props.footer) embed.setFooter(props.footer);
 
     return embed;
 }

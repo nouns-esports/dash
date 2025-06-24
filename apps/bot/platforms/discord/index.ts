@@ -16,6 +16,9 @@ import { Button } from "./components/button";
 import type { Select } from "./components/select";
 import type { Embed } from "./components/embed";
 import { QuestEmbed } from "./embeds/quest";
+import { PredictionEmbed } from "./embeds/prediction";
+import { getQuests } from "~/packages/agent/src/mastra/tools/getQuests";
+import { getPredictions } from "~/packages/agent/src/mastra/tools/getPredictions";
 
 // import { createCommunity } from "~/packages/server/mutations/createCommunity";
 // import { getCommunity } from "~/packages/server/queries/getCommunity";
@@ -222,38 +225,73 @@ client.on("messageCreate", async (message) => {
             experimental_output: z
                 .object({
                     text: z.string().describe("The text response to the user's message"),
-                    quests: z
-                        .object({
-                            id: z.string().describe("The id of the quest"),
-                            name: z.string().describe("The name of the quest"),
-                            description: z.string().describe("The description of the quest"),
-                            image: z.string().describe("The image of the quest"),
-                            xp: z
-                                .number()
-                                .describe("Amount of xp awarded for completing the quest"),
-                            points: z
-                                .number()
-                                .describe("Amount of points awarded for completing the quest"),
-                            pointsLabel: z.string().describe("The community's points name"),
-                        })
-                        .required({
-                            id: true,
-                            name: true,
-                            description: true,
-                            image: true,
-                            xp: true,
-                            points: true,
-                            pointsLabel: true,
-                        })
-                        .array()
+                    quests: getQuests.outputSchema
                         .optional()
                         .describe(
                             "An array of quests if requested / relevant to this response from the getQuests tool call",
                         ),
+
+                    // z
+                    //     .object({
+                    //         id: z.string().describe("The id of the quest"),
+                    //         name: z.string().describe("The name of the quest"),
+                    //         description: z.string().describe("The description of the quest"),
+                    //         image: z.string().describe("The image of the quest"),
+                    //         xp: z
+                    //             .number()
+                    //             .describe("Amount of xp awarded for completing the quest"),
+                    //         points: z
+                    //             .number()
+                    //             .describe("Amount of points awarded for completing the quest"),
+                    //         pointsLabel: z.string().describe("The community's points name"),
+                    //     })
+                    //     .required({
+                    //         id: true,
+                    //         name: true,
+                    //         description: true,
+                    //         image: true,
+                    //         xp: true,
+                    //         points: true,
+                    //         pointsLabel: true,
+                    //     })
+                    //     .array()
+                    //     .optional()
+                    //     .describe(
+                    //         "An array of quests if requested / relevant to this response from the getQuests tool call",
+                    //     ),
+                    predictions: getPredictions.outputSchema
+                        .optional()
+                        .describe(
+                            "An array of predictions if requested / relevant to this response from the getPredictions tool call",
+                        ),
+
+                    // z
+                    //     .object({
+                    //         id: z.string().describe("The id of the prediction"),
+                    //         name: z.string().describe("The name of the prediction"),
+                    //         description: z.string().describe("The description of the prediction"),
+                    //         image: z.string().describe("The image of the prediction"),
+                    //         xp: z
+                    //             .number()
+                    //             .describe("Amount of xp earned for predicting the right outcome"),
+                    //     })
+                    //     .required({
+                    //         id: true,
+                    //         name: true,
+                    //         description: true,
+                    //         image: true,
+                    //         xp: true,
+                    //     })
+                    //     .array()
+                    //     .optional()
+                    //     .describe(
+                    //         "An array of predictions if requested / relevant to this response from the getPredictions tool call",
+                    //     ),
                 })
                 .required({
                     text: true,
                     quests: true,
+                    predictions: true,
                 }),
             memory: {
                 thread: {
@@ -285,6 +323,28 @@ client.on("messageCreate", async (message) => {
                         }),
                     ]),
                 );
+            }
+
+            if (response.object.predictions) {
+                embeds.push(
+                    ...response.object.predictions.map((prediction) =>
+                        PredictionEmbed({ prediction }),
+                    ),
+                );
+
+                if (response.object.predictions.length === 1) {
+                    const prediction = response.object.predictions[0];
+
+                    components.push(
+                        Row([
+                            Button({
+                                label: "View",
+                                type: "link",
+                                url: `https://nouns.gg/predictions/${prediction.id}`,
+                            }),
+                        ]),
+                    );
+                }
             }
         }
 

@@ -17,6 +17,7 @@ import { platforms, type Platforms } from "../../../../platforms";
 import { tipPoints } from "../tools/tipPoints";
 import { getLevel } from "~/packages/server/utils/getLevel";
 import { getQuests } from "../tools/getQuests";
+import { getPredictions } from "../tools/getPredictions";
 
 // When update this type, remember to migrate any existing thread metadata on mastra.mastra_threads.metadata
 export type DashRuntimeContext = {
@@ -123,7 +124,7 @@ export const dash = new Agent({
             }
         }
 
-        return { ...availableTools, tipPoints, getQuests };
+        return { ...availableTools, tipPoints, getQuests, getPredictions };
     },
     memory,
 });

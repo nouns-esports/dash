@@ -4,7 +4,6 @@ import { questCompletions, quests } from "~/packages/db/schema/public";
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 import type { DashRuntimeContext } from "../agents";
-// import { createSelectSchema } from 'drizzle-zod';
 
 export const getQuests = createTool({
     id: "internal:getQuests",
@@ -22,7 +21,6 @@ export const getQuests = createTool({
         limit: z.number().max(3).optional().describe("The number of quests to get with a max of 3"),
     }),
     outputSchema: z.array(
-        // createSelectSchema(quests),
         z.object({
             id: z.string().describe("The id of the quest"),
             name: z.string().describe("The name of the quest"),

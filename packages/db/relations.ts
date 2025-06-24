@@ -1,12 +1,15 @@
 import { relations } from "drizzle-orm";
 import {
     accounts,
+    bets,
     communities,
     communityAdmins,
     communityConnections,
     escrows,
+    outcomes,
     passes,
     points,
+    predictions,
     questActions,
     questCompletions,
     quests,
@@ -147,4 +150,43 @@ export const questActionsRelations = relations(questActions, ({ one }) => ({
         fields: [questActions.quest],
         references: [quests.id],
     }),
+}));
+
+export const predictionsRelations = relations(predictions, ({ one, many }) => ({
+    // event: one(events, {
+    // 	fields: [predictions.event],
+    // 	references: [events.id],
+    // }),
+    outcomes: many(outcomes),
+    bets: many(bets),
+    earnedXP: many(xp),
+    points: many(points),
+    community: one(communities, {
+        fields: [predictions.community],
+        references: [communities.id],
+    }),
+}));
+
+export const outcomesRelations = relations(outcomes, ({ one, many }) => ({
+    prediction: one(predictions, {
+        fields: [outcomes.prediction],
+        references: [predictions.id],
+    }),
+    bets: many(bets),
+}));
+
+export const betsRelations = relations(bets, ({ one, many }) => ({
+    user: one(users, {
+        fields: [bets.user],
+        references: [users.id],
+    }),
+    outcome: one(outcomes, {
+        fields: [bets.outcome],
+        references: [outcomes.id],
+    }),
+    prediction: one(predictions, {
+        fields: [bets.prediction],
+        references: [predictions.id],
+    }),
+    points: many(points),
 }));
