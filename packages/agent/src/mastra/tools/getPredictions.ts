@@ -4,6 +4,7 @@ import type { DashRuntimeContext } from "../agents";
 import { db } from "~/packages/db";
 import { predictions } from "~/packages/db/schema/public";
 import { and, desc, eq } from "drizzle-orm";
+import { env } from "~/env";
 
 export const getPredictions = createTool({
     id: "internal:getPredictions",
@@ -65,7 +66,7 @@ export const getPredictions = createTool({
             id: prediction.id,
             name: prediction.name,
             rules: prediction.rules,
-            image: `https://nouns.gg/api/images/predictions/${prediction.id}`,
+            image: `${env.NEXT_PUBLIC_DOMAIN}/api/images/predictions/${prediction.id}`,
             xp: prediction.xp,
             pool: prediction.pool,
             closed: prediction.closed,
