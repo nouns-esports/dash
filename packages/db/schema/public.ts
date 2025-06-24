@@ -5,6 +5,14 @@ import type { Platforms, Connections } from "../../platforms";
 const platforms = () => text().$type<Exclude<Platforms, "internal">>();
 const connections = () => text().$type<Connections>();
 
+export const meta = pgTable(
+    "meta",
+    (t) => ({
+        maintenance: t.boolean().notNull().default(false),
+    }),
+    (t) => [check("meta_only_one_record", sql`(SELECT COUNT(*) FROM "meta") <= 1`)],
+);
+
 export const communities = pgTable("communities", (t) => ({
     id: t.uuid().primaryKey().defaultRandom(),
     handle: t.text().notNull().unique(),
@@ -42,12 +50,16 @@ export const communities = pgTable("communities", (t) => ({
     deprecated_featured: t.boolean("featured").notNull().default(false),
 }));
 
-export const communityAdmins = pgTable("community_admins", (t) => ({
-    id: t.uuid().primaryKey().defaultRandom(),
-    community: t.uuid().notNull(),
-    user: t.uuid().notNull(),
-    owner: t.boolean().notNull(),
-}));
+export const communityAdmins = pgTable(
+    "community_admins",
+    (t) => ({
+        id: t.uuid().primaryKey().defaultRandom(),
+        community: t.uuid().notNull(),
+        user: t.uuid().notNull(),
+        owner: t.boolean().notNull(),
+    }),
+    (t) => [unique("community_user_unique").on(t.community, t.user)],
+);
 
 export const communityConnections = pgTable("community_connections", (t) => ({
     id: t.uuid().primaryKey().defaultRandom(),
@@ -114,15 +126,19 @@ export const passes = pgTable(
 );
 
 // Create points and xp records on claim
-export const escrows = pgTable("escrows", (t) => ({
-    id: t.uuid().primaryKey().defaultRandom(),
-    // The account that, in the future, can claim the contents of this escrow to their user account that doesn't exist in the present
-    heir: t.uuid().notNull(),
-    community: t.uuid().notNull(),
-    points: t.numeric({ precision: 38, scale: 18, mode: "number" }).notNull().default(0),
-    xp: t.bigint({ mode: "number" }).notNull().default(0),
-    claimed: t.boolean().notNull().default(false),
-}));
+export const escrows = pgTable(
+    "escrows",
+    (t) => ({
+        id: t.uuid().primaryKey().defaultRandom(),
+        // The account that, in the future, can claim the contents of this escrow to their user account that doesn't exist in the present
+        heir: t.uuid().notNull(),
+        community: t.uuid().notNull(),
+        points: t.numeric({ precision: 38, scale: 18, mode: "number" }).notNull().default(0),
+        xp: t.bigint({ mode: "number" }).notNull().default(0),
+        claimed: t.boolean().notNull().default(false),
+    }),
+    (t) => [unique("escrows_heir_community_unique").on(t.heir, t.community)],
+);
 
 export const xp = pgTable("xp", (t) => ({
     id: t.uuid().primaryKey().defaultRandom(),
@@ -140,15 +156,6 @@ export const xp = pgTable("xp", (t) => ({
     order: t.text(),
     raffleEntry: t.integer(),
     attendee: t.integer(),
-    // DEPRECATED
-    deprecated_quest: t.bigint("__quest", { mode: "number" }),
-    deprecated_snapshot: t.integer("__snapshot"),
-    deprecated_station: t.integer("station"),
-    deprecated_checkin: t.integer("__checkin"),
-    deprecated_prediction: t.bigint("__prediction", { mode: "number" }),
-    deprecated_vote: t.integer("__vote"),
-    deprecated_proposal: t.integer("__proposal"),
-    deprecated_raffleEntry: t.integer("__raffleEntry"),
 }));
 
 export const points = pgTable(
@@ -168,12 +175,6 @@ export const points = pgTable(
         raffleEntry: t.integer(),
         bet: t.integer(),
         prediction: t.bigint({ mode: "number" }),
-        // DEPRECATED
-        deprecated_prediction: t.bigint("__prediction", { mode: "number" }),
-        deprecated_checkin: t.integer("__checkin"),
-        deprecated_raffleEntry: t.integer("__raffleEntry"),
-        deprecated_bet: t.integer("__bet"),
-        deprecated_quest: t.bigint("__quest", { mode: "number" }),
     }),
     (t) => [
         check("from_or_to_exists", sql`("from" IS NOT NULL OR "to" IS NOT NULL)`),
@@ -208,8 +209,6 @@ export const quests = pgTable(
         deprecated_start: t.timestamp("start"),
         deprecated_end: t.timestamp("end"),
         deprecated_featured: t.boolean("featured").notNull().default(false),
-        deprecated_id: t.bigserial("__id", { mode: "number" }),
-        deprecated_event: t.bigint("__event", { mode: "number" }),
     }),
     (t) => [unique("quests_handle_and_community_unique").on(t.handle, t.community)],
 );
@@ -220,19 +219,58 @@ export const questActions = pgTable("quest_actions", (t) => ({
     action: t.text().notNull(),
     description: t.jsonb().array().$type<any>().notNull(),
     inputs: t.jsonb().$type<{ [key: string]: { [key: string]: any | undefined } }>().notNull(),
-    // DEPRECATED
-    deprecated_id: t.bigserial("__id", { mode: "number" }),
-    deprecated_quest: t.bigint("__quest", { mode: "number" }),
 }));
 
-export const questCompletions = pgTable("quest_completions", (t) => ({
+export const questCompletions = pgTable(
+    "quest_completions",
+    (t) => ({
+        id: t.uuid().primaryKey().defaultRandom(),
+        quest: t.uuid().notNull(),
+        user: t.uuid().notNull(),
+        timestamp: t.timestamp().notNull().defaultNow(),
+        // xp: t.uuid().notNull(),
+        // points: t.uuid().notNull(),
+    }),
+    (t) => [unique("quest_completions_quest_user_unique").on(t.quest, t.user)],
+);
+
+export const predictions = pgTable(
+    "predictions",
+    (t) => ({
+        id: t.uuid().primaryKey().defaultRandom(),
+        handle: t.text().notNull(),
+        event: t.uuid(),
+        community: t.uuid().notNull(),
+        draft: t.boolean().notNull().default(true),
+        name: t.text().notNull(),
+        image: t.text().notNull(),
+        rules: t.jsonb().$type<any>().notNull(),
+        xp: t.integer().notNull(),
+        closed: t.boolean().notNull().default(false),
+        resolved: t.boolean().notNull().default(false),
+        start: t.timestamp(),
+        end: t.timestamp(),
+        pool: t.numeric({ precision: 38, scale: 18, mode: "number" }).notNull().default(0),
+        // DEPRECATED
+        deprecated_featured: t.boolean("featured").notNull().default(false),
+    }),
+    (t) => [unique("predictions_handle_community_unique").on(t.handle, t.community)],
+);
+
+export const outcomes = pgTable("outcomes", (t) => ({
     id: t.uuid().primaryKey().defaultRandom(),
-    quest: t.uuid().notNull(),
+    prediction: t.uuid().notNull(),
+    name: t.text().notNull(),
+    image: t.text(),
+    result: t.boolean(),
+    pool: t.numeric({ precision: 38, scale: 18, mode: "number" }).notNull().default(0),
+}));
+
+export const bets = pgTable("bets", (t) => ({
+    id: t.uuid().primaryKey().defaultRandom(),
     user: t.uuid().notNull(),
+    outcome: t.uuid().notNull(),
+    amount: t.numeric({ precision: 38, scale: 18, mode: "number" }).notNull().default(0),
+    prediction: t.uuid().notNull(),
     timestamp: t.timestamp().notNull().defaultNow(),
-    // xp: t.uuid().notNull(),
-    // points: t.uuid().notNull(),
-    // DEPRECATED
-    deprecated_id: t.bigserial("__id", { mode: "number" }),
-    deprecated_quest: t.bigint("__quest", { mode: "number" }),
 }));

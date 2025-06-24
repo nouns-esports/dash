@@ -59,15 +59,7 @@ export const memory = new Memory({
 
 export const dash = new Agent({
     name: "Dash",
-    model: async ({ runtimeContext }) => {
-        // const community = runtimeContext.get("community") as DashRuntimeContext["community"];
-
-        // if (community?.boosts === 0) {
-        //     return openai("o4-mini");
-        // }
-
-        return openai("o4-mini");
-    },
+    model: openai("gpt-4o-mini"),
     instructions: async ({ runtimeContext }) => {
         const community = runtimeContext.get("community") as DashRuntimeContext["community"];
         const user = runtimeContext.get("user") as DashRuntimeContext["user"];
