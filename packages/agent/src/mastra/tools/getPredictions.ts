@@ -66,7 +66,7 @@ export const getPredictions = createTool({
             id: prediction.id,
             name: prediction.name,
             rules: prediction.rules,
-            image: `${env.NEXT_PUBLIC_DOMAIN}/api/images/predictions/${prediction.id}`,
+            image: `${env.NEXT_PUBLIC_DOMAIN}/api/images/predictions?prediction=${prediction.id}`,
             xp: prediction.xp,
             pool: prediction.pool,
             closed: prediction.closed,
