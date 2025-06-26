@@ -17,6 +17,8 @@ export async function GET(request: Request) {
         return Response.json({ error: "Prediction is required" }, { status: 400 });
     }
 
+    console.log("params", params);
+
     const prediction = await db.pgpool.query.predictions.findFirst({
         where: eq(predictions.id, params.prediction),
         with: {

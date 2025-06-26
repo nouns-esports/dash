@@ -325,7 +325,6 @@ client.on("messageCreate", async (message) => {
 
         for (const additionalMessage of additionalMessages) {
             await message.channel.send({
-                content: response.object.text,
                 components: additionalMessage.components.map((component) => component.toJSON()),
                 embeds: additionalMessage.embeds.map((embed) => embed.toJSON()),
             });

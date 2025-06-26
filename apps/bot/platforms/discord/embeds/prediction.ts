@@ -9,7 +9,7 @@ export function PredictionEmbed(props: {
         title: props.prediction.name,
         image: props.prediction.image,
         url: `https://nouns.gg/predictions/${props.prediction.id}`,
-        color: "#4A5EEB",
+        // color: "#4A5EEB",
         footer: {
             text: `Earns ${props.prediction.xp}xp`,
         },
