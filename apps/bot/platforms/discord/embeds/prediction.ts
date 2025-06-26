@@ -1,4 +1,3 @@
-import { env } from "~/env";
 import { Embed } from "../components/embed";
 import { z } from "zod";
 import { getPredictions } from "~/packages/agent/src/mastra/tools/getPredictions";
@@ -10,8 +9,9 @@ export function PredictionEmbed(props: {
         title: props.prediction.name,
         image: props.prediction.image,
         url: `https://nouns.gg/predictions/${props.prediction.id}`,
+        color: "#4A5EEB",
         footer: {
-            text: `Earns **${props.prediction.xp}xp**`,
+            text: `Earns ${props.prediction.xp}xp`,
         },
     });
 }

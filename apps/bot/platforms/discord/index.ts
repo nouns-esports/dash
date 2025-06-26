@@ -225,68 +225,12 @@ client.on("messageCreate", async (message) => {
             experimental_output: z
                 .object({
                     text: z.string().describe("The text response to the user's message"),
-                    quests: getQuests.outputSchema
-                        .optional()
-                        .describe(
-                            "An array of quests if requested / relevant to this response from the getQuests tool call",
-                        ),
-
-                    // z
-                    //     .object({
-                    //         id: z.string().describe("The id of the quest"),
-                    //         name: z.string().describe("The name of the quest"),
-                    //         description: z.string().describe("The description of the quest"),
-                    //         image: z.string().describe("The image of the quest"),
-                    //         xp: z
-                    //             .number()
-                    //             .describe("Amount of xp awarded for completing the quest"),
-                    //         points: z
-                    //             .number()
-                    //             .describe("Amount of points awarded for completing the quest"),
-                    //         pointsLabel: z.string().describe("The community's points name"),
-                    //     })
-                    //     .required({
-                    //         id: true,
-                    //         name: true,
-                    //         description: true,
-                    //         image: true,
-                    //         xp: true,
-                    //         points: true,
-                    //         pointsLabel: true,
-                    //     })
-                    //     .array()
-                    //     .optional()
-                    //     .describe(
-                    //         "An array of quests if requested / relevant to this response from the getQuests tool call",
-                    //     ),
-                    predictions: getPredictions.outputSchema
-                        .optional()
-                        .describe(
-                            "An array of predictions if requested / relevant to this response from the getPredictions tool call",
-                        ),
-
-                    // z
-                    //     .object({
-                    //         id: z.string().describe("The id of the prediction"),
-                    //         name: z.string().describe("The name of the prediction"),
-                    //         description: z.string().describe("The description of the prediction"),
-                    //         image: z.string().describe("The image of the prediction"),
-                    //         xp: z
-                    //             .number()
-                    //             .describe("Amount of xp earned for predicting the right outcome"),
-                    //     })
-                    //     .required({
-                    //         id: true,
-                    //         name: true,
-                    //         description: true,
-                    //         image: true,
-                    //         xp: true,
-                    //     })
-                    //     .array()
-                    //     .optional()
-                    //     .describe(
-                    //         "An array of predictions if requested / relevant to this response from the getPredictions tool call",
-                    //     ),
+                    quests: getQuests.outputSchema.describe(
+                        "An array of quests if requested / relevant to this response from the getQuests tool call",
+                    ),
+                    predictions: getPredictions.outputSchema.describe(
+                        "An array of predictions if requested / relevant to this response from the getPredictions tool call",
+                    ),
                 })
                 .required({
                     text: true,
@@ -308,51 +252,84 @@ client.on("messageCreate", async (message) => {
         const components: Array<ReturnType<typeof Row>> = [];
         const embeds: Array<ReturnType<typeof Embed>> = [];
 
-        if (response.object.quests) {
-            embeds.push(...response.object.quests.map((quest) => QuestEmbed({ quest })));
+        const additionalMessages: Array<{
+            components: Array<ReturnType<typeof Row>>;
+            embeds: Array<ReturnType<typeof Embed>>;
+        }> = [];
 
-            if (response.object.quests.length === 1) {
-                const quest = response.object.quests[0];
+        for (let i = 0; i < response.object.quests.length; i++) {
+            const quest = response.object.quests[i];
 
-                components.push(
-                    Row([
-                        Button({
-                            label: "View",
-                            type: "link",
-                            url: `https://nouns.gg/quests/${quest.id}`,
-                        }),
-                    ]),
-                );
+            const component = Row([
+                Button({
+                    label: "Check",
+                    type: "primary",
+                    customId: `quest:${quest.id}:check`,
+                }),
+                Button({
+                    label: "View",
+                    type: "link",
+                    url: `https://nouns.gg/quests/${quest.id}`,
+                }),
+            ]);
+
+            const embed = QuestEmbed({ quest });
+
+            if (i === 0) {
+                embeds.push(embed);
+                components.push(component);
+                continue;
             }
 
-            if (response.object.predictions) {
-                embeds.push(
-                    ...response.object.predictions.map((prediction) =>
-                        PredictionEmbed({ prediction }),
-                    ),
-                );
-
-                if (response.object.predictions.length === 1) {
-                    const prediction = response.object.predictions[0];
-
-                    components.push(
-                        Row([
-                            Button({
-                                label: "View",
-                                type: "link",
-                                url: `https://nouns.gg/predictions/${prediction.id}`,
-                            }),
-                        ]),
-                    );
-                }
-            }
+            additionalMessages.push({
+                components: [component],
+                embeds: [embed],
+            });
         }
 
-        message.reply({
+        for (let i = 0; i < response.object.predictions.length; i++) {
+            const prediction = response.object.predictions[i];
+
+            const component = Row([
+                Button({
+                    label: "Predict",
+                    type: "primary",
+                    customId: `prediction:${prediction.id}:predict`,
+                }),
+                Button({
+                    label: "View",
+                    type: "link",
+                    url: `https://nouns.gg/predictions/${prediction.id}`,
+                }),
+            ]);
+
+            const embed = PredictionEmbed({ prediction });
+
+            if (i === 0) {
+                embeds.push(embed);
+                components.push(component);
+                continue;
+            }
+
+            additionalMessages.push({
+                components: [component],
+                embeds: [embed],
+            });
+        }
+
+        await message.reply({
             content: response.object.text,
             components: components.map((component) => component.toJSON()),
             embeds: embeds.map((embed) => embed.toJSON()),
         });
+
+        for (const additionalMessage of additionalMessages) {
+            await message.channel.send({
+                content: response.object.text,
+                components: additionalMessage.components.map((component) => component.toJSON()),
+                embeds: additionalMessage.embeds.map((embed) => embed.toJSON()),
+            });
+        }
     } catch (error) {
         const digest = createHash("sha256").update(JSON.stringify(error)).digest("hex");
         console.error(`Error: ${digest}`, error);
