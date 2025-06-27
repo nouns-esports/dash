@@ -1,9 +1,3 @@
 [phases.setup]
 nixpkgsArchive = "69dfebb3d175bde602f612915c5576a41b18486b"
-nixPkgs = ["bun"]
-
-[phases.install]
-cmds = ["bun install"]
-
-[provider]
-name = "custom"
+nixPkgs = ["bun" "nodejs_20"]
