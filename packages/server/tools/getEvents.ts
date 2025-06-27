@@ -2,7 +2,7 @@ import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 import type { DashRuntimeContext } from "../../agent/src/mastra/agents";
 import { db } from "~/packages/db";
-import { events } from "~/packages/db/schema/public";
+import { attendees, events } from "~/packages/db/schema/public";
 import { and, desc, eq } from "drizzle-orm";
 
 export const getEvents = createTool({
@@ -19,6 +19,7 @@ export const getEvents = createTool({
             description: z.string().describe("The description of the event"),
             image: z.string().describe("The image of the event"),
             attendeeCount: z.number().nullable().describe("The number of attendees for the event"),
+            registered: z.boolean().describe("Whether the user is registered for the event"),
         }),
     ),
     execute: async ({ context, runtimeContext }) => {
@@ -33,6 +34,12 @@ export const getEvents = createTool({
             where: and(eq(events.community, community.id)),
             orderBy: desc(events.start),
             limit: context.limit ?? 3,
+            with: {
+                attendees: {
+                    where: eq(attendees.user, user.id),
+                    limit: 1,
+                },
+            },
         });
 
         return fetchedEvents.map((event) => ({
@@ -41,6 +48,7 @@ export const getEvents = createTool({
             description: event.description,
             image: event.image,
             attendeeCount: event.attendeeCount,
+            registered: event.attendees.length > 0,
         }));
     },
 });

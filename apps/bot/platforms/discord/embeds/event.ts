@@ -12,7 +12,7 @@ export function EventEmbed(props: {
         color: "#4A5EEB",
         footer: props.event.attendeeCount
             ? {
-                  text: `${props.event.attendeeCount} attendees`,
+                  text: `${props.event.attendeeCount} attending`,
               }
             : undefined,
     });
