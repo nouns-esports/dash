@@ -1,6 +1,6 @@
 import { env } from "~/env";
 import { Embed } from "../components/embed";
-import { getQuests } from "~/packages/agent/src/mastra/tools/getQuests";
+import { getQuests } from "~/packages/server/tools/getQuests";
 import { z } from "zod";
 
 export function QuestEmbed(props: {
@@ -10,7 +10,7 @@ export function QuestEmbed(props: {
         title: props.quest.name,
         image: `${props.quest.image}?img-width=1200&img-height=800&img-fit=cover&img-onerror=redirect`,
         url: `https://nouns.gg/quests/${props.quest.id}`,
-        // color: "#4A5EEB",
+        color: "#4A5EEB",
         footer: {
             text: `Earns ${props.quest.xp}xp ${props.quest.points > 0 ? `and ${props.quest.points} ${props.quest.pointsLabel}` : ""}`,
         },

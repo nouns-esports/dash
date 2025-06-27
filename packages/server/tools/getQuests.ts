@@ -1,9 +1,9 @@
-import { db } from "../../../../db";
+import { db } from "~/packages/db";
 import { and, desc, eq, gte, sql } from "drizzle-orm";
-import { questCompletions, quests } from "../../../../db/schema/public";
+import { questCompletions, quests } from "~/packages/db/schema/public";
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
-import type { DashRuntimeContext } from "../agents";
+import type { DashRuntimeContext } from "../../agent/src/mastra/agents";
 
 export const getQuests = createTool({
     id: "internal:getQuests",

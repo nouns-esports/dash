@@ -1,13 +1,13 @@
-import { Mastra } from '@mastra/core';
-import { dash, type DashRuntimeContext } from './agents';
-import { env } from '../../../../env';
-import { platforms } from '../../../platforms';
-import type { RuntimeContext } from '@mastra/core/runtime-context';
+import { Mastra } from "@mastra/core";
+import { dash, type DashRuntimeContext } from "./agents";
+import { env } from "../../../../env";
+import { platforms } from "../../../platforms";
+import type { RuntimeContext } from "@mastra/core/runtime-context";
 import { PinoLogger } from "@mastra/loggers";
 
 export const mastra = new Mastra({
     agents: {
-        dash
+        dash,
     },
     server: {
         middleware: [
@@ -27,19 +27,22 @@ export const mastra = new Mastra({
             },
             // Runtime Context Validation
             async (c, next) => {
-                const runtimeContext = c.get("runtimeContext") as RuntimeContext<DashRuntimeContext>;
+                const runtimeContext = c.get(
+                    "runtimeContext",
+                ) as RuntimeContext<DashRuntimeContext>;
 
                 const runtimeContextHeader = c.req.header("X-Runtime-Context");
 
                 if (runtimeContextHeader) {
-                    const parsed = JSON.parse(Buffer.from(runtimeContextHeader, 'base64').toString('utf8')) as DashRuntimeContext;
+                    const parsed = JSON.parse(
+                        Buffer.from(runtimeContextHeader, "base64").toString("utf8"),
+                    ) as DashRuntimeContext;
                     runtimeContext.set("platform", parsed.platform);
                     runtimeContext.set("room", parsed.room);
                     runtimeContext.set("community", parsed.community);
                     runtimeContext.set("user", parsed.user);
                     runtimeContext.set("mentions", parsed.mentions);
                 }
-
 
                 if (env.NEXT_PUBLIC_ENVIRONMENT === "dev") {
                     runtimeContext.set("community", {
@@ -77,16 +80,20 @@ export const mastra = new Mastra({
                     runtimeContext.set("mentions", []);
                 }
 
-                if (!runtimeContext.get("platform") || !Object.keys(platforms).includes(runtimeContext.get("platform")) || !runtimeContext.get("user")) {
+                if (
+                    !runtimeContext.get("platform") ||
+                    !Object.keys(platforms).includes(runtimeContext.get("platform")) ||
+                    !runtimeContext.get("user")
+                ) {
                     return new Response("Bad Request", { status: 400 });
                 }
 
                 await next();
             },
-        ]
+        ],
     },
     logger: new PinoLogger({
         level: "debug",
         name: "mastra",
     }),
-})
+});

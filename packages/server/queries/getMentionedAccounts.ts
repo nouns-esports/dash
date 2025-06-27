@@ -8,7 +8,10 @@ export async function getMentionedAccounts(input: {
     platform: Platforms;
 }) {
     return db.pgpool.query.accounts.findMany({
-        where: and(inArray(accounts.identifier, input.identifiers), eq(accounts.platform, input.platform)),
+        where: and(
+            inArray(accounts.identifier, input.identifiers),
+            eq(accounts.platform, input.platform),
+        ),
         with: {
             user: {
                 with: {

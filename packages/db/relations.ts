@@ -1,6 +1,8 @@
 import { relations } from "drizzle-orm";
 import {
     accounts,
+    assets,
+    awards,
     bets,
     communities,
     communityAdmins,
@@ -10,17 +12,28 @@ import {
     passes,
     points,
     predictions,
+    proposals,
     questActions,
+    roundActions,
     questCompletions,
     quests,
+    rounds,
     users,
     wallets,
     xp,
+    votes,
+    events,
+    eventActions,
+    attendees,
 } from "./schema/public";
 
 export const communityRelations = relations(communities, ({ many }) => ({
-    connections: many(communityConnections),
+    rounds: many(rounds),
+    events: many(events),
+    quests: many(quests),
     admins: many(communityAdmins),
+    predictions: many(predictions),
+    connections: many(communityConnections),
 }));
 
 export const communityAdminRelations = relations(communityAdmins, ({ one, many }) => ({
@@ -39,6 +52,28 @@ export const communityConnectionRelations = relations(communityConnections, ({ o
     community: one(communities, {
         fields: [communityConnections.community],
         references: [communities.id],
+    }),
+}));
+
+export const eventsRelations = relations(events, ({ one, many }) => ({
+    community: one(communities, {
+        fields: [events.community],
+        references: [communities.id],
+    }),
+    quests: many(quests),
+    rounds: many(rounds),
+    attendees: many(attendees),
+    predictions: many(predictions),
+    // products: many(products),
+    // checkpoints: many(checkpoints),
+    // raffles: many(raffles),
+    actions: many(eventActions),
+}));
+
+export const eventActionsRelations = relations(eventActions, ({ one }) => ({
+    event: one(events, {
+        fields: [eventActions.event],
+        references: [events.id],
     }),
 }));
 
@@ -129,10 +164,10 @@ export const questRelations = relations(quests, ({ one, many }) => ({
         fields: [quests.community],
         references: [communities.id],
     }),
-    // event: one(events, {
-    //     fields: [quests.event],
-    //     references: [events.id],
-    // }),
+    event: one(events, {
+        fields: [quests.event],
+        references: [events.id],
+    }),
     completions: many(questCompletions),
     actions: many(questActions),
     xpRecords: many(xp),
@@ -153,10 +188,10 @@ export const questActionsRelations = relations(questActions, ({ one }) => ({
 }));
 
 export const predictionsRelations = relations(predictions, ({ one, many }) => ({
-    // event: one(events, {
-    // 	fields: [predictions.event],
-    // 	references: [events.id],
-    // }),
+    event: one(events, {
+        fields: [predictions.event],
+        references: [events.id],
+    }),
     outcomes: many(outcomes),
     bets: many(bets),
     earnedXP: many(xp),
@@ -189,4 +224,59 @@ export const betsRelations = relations(bets, ({ one, many }) => ({
         references: [predictions.id],
     }),
     points: many(points),
+}));
+
+export const roundsRelations = relations(rounds, ({ one, many }) => ({
+    awards: many(awards),
+    proposals: many(proposals),
+    votes: many(votes),
+    community: one(communities, {
+        fields: [rounds.community],
+        references: [communities.id],
+    }),
+    event: one(events, {
+        fields: [rounds.event],
+        references: [events.id],
+    }),
+    actions: many(roundActions),
+}));
+
+export const roundActionsRelations = relations(roundActions, ({ one }) => ({
+    round: one(rounds, {
+        fields: [roundActions.round],
+        references: [rounds.id],
+    }),
+}));
+
+export const assetsRelations = relations(assets, ({ many }) => ({
+    awards: many(awards),
+}));
+
+export const proposalsRelations = relations(proposals, ({ one, many }) => ({
+    round: one(rounds, {
+        fields: [proposals.round],
+        references: [rounds.id],
+    }),
+    votes: many(votes),
+    user: one(users, {
+        fields: [proposals.user],
+        references: [users.id],
+    }),
+    xp: many(xp),
+}));
+
+export const votesRelations = relations(votes, ({ one, many }) => ({
+    proposal: one(proposals, {
+        fields: [votes.proposal],
+        references: [proposals.id],
+    }),
+    round: one(rounds, {
+        fields: [votes.round],
+        references: [rounds.id],
+    }),
+    user: one(users, {
+        fields: [votes.user],
+        references: [users.id],
+    }),
+    xp: many(xp),
 }));

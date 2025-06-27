@@ -1,9 +1,9 @@
 import { z } from "zod";
 import { createTool } from "@mastra/core/tools";
-import { db } from "../../../../db";
+import { db } from "../../db";
 import { sql } from "drizzle-orm";
-import { escrows, passes, points } from "../../../../db/schema/public";
-import type { DashRuntimeContext } from "../agents";
+import { escrows, passes, points } from "../../db/schema/public";
+import type { DashRuntimeContext } from "../../agent/src/mastra/agents";
 
 export const tipPoints = createTool({
     id: "internal:tipPoints",

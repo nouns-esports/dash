@@ -2,31 +2,35 @@ import { db } from "~/packages/db";
 import { pinataClient } from "../clients/pinata";
 import { communities, communityAdmins, communityConnections } from "~/packages/db/schema/public";
 import { eq } from "drizzle-orm";
-import type { platforms } from "~/packages/platforms";
-import { z } from "zod";
+import type { platforms, Platforms } from "~/packages/platforms";
 
-export async function createCommunity(input: {
+export type Community = typeof communities.$inferSelect & {
+    admins: (typeof communityAdmins.$inferSelect)[];
+    connections: (typeof communityConnections.$inferSelect)[];
+};
+
+export async function createCommunity<TPlatform extends Platforms>(input: {
     name: string;
     image: string;
     user: string;
-} & ({
-    platform: "discord";
-    connection: "discord:server";
-    config: z.infer<typeof platforms.discord["connections"]["server"]["config"]>;
-})) {
-    let community: typeof communities.$inferSelect & {
-        admins: typeof communityAdmins.$inferSelect[];
-        connections: typeof communityConnections.$inferSelect[];
-    } | undefined;
+    platform: {
+        id: TPlatform;
+        config: (typeof platforms)[TPlatform]["config"];
+    };
+}) {
+    let community: Community | undefined;
 
     await db.primary.transaction(async (tx) => {
         const image = await pinataClient.upload.url(input.image);
 
-        const [createdCommunity] = await tx.insert(communities).values({
-            handle: input.name.toLowerCase().replace(/ /g, "-"),
-            name: input.name,
-            image: image.IpfsHash,
-        }).returning();
+        const [createdCommunity] = await tx
+            .insert(communities)
+            .values({
+                handle: input.name.toLowerCase().replace(/ /g, "-"),
+                name: input.name,
+                image: image.IpfsHash,
+            })
+            .returning();
 
         await tx.insert(communityAdmins).values({
             community: createdCommunity.id,
@@ -36,9 +40,8 @@ export async function createCommunity(input: {
 
         await tx.insert(communityConnections).values({
             community: createdCommunity.id,
-            platform: input.platform,
-            type: input.connection,
-            config: input.config,
+            platform: input.platform.id,
+            config: input.platform.config,
         });
 
         community = await tx.query.communities.findFirst({

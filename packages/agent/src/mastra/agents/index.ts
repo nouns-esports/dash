@@ -9,16 +9,16 @@ import {
     communityConnections,
     passes,
     users,
-} from "../../../../db/schema/public";
+} from "~/packages/db/schema/public";
 import { PostgresStore } from "@mastra/pg";
-import { env } from "../../../../../env";
-import { platforms, type Platforms } from "../../../../platforms";
+import { env } from "~/env";
+import { platforms, type Platforms } from "~/packages/platforms";
 
 // Internal Tools
-import { tipPoints } from "../../../../server/tools/tipPoints";
-import { getLevel } from "../../../../../packages/server/utils/getLevel";
-import { getQuests } from "../tools/getQuests";
-import { getPredictions } from "../tools/getPredictions";
+import { tipPoints } from "~/packages/server/tools/tipPoints";
+import { getLevel } from "~/packages/server/utils/getLevel";
+import { getQuests } from "~/packages/server/tools/getQuests";
+import { getPredictions } from "~/packages/server/tools/getPredictions";
 
 // When update this type, remember to migrate any existing thread metadata on mastra.mastra_threads.metadata
 export type DashRuntimeContext = {

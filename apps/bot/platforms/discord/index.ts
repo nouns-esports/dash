@@ -17,8 +17,16 @@ import type { Select } from "./components/select";
 import type { Embed } from "./components/embed";
 import { QuestEmbed } from "./embeds/quest";
 import { PredictionEmbed } from "./embeds/prediction";
-import { getQuests } from "~/packages/agent/src/mastra/tools/getQuests";
-import { getPredictions } from "~/packages/agent/src/mastra/tools/getPredictions";
+import { getQuests } from "~/packages/server/tools/getQuests";
+import { getPredictions } from "~/packages/server/tools/getPredictions";
+import { Input, Modal } from "./components/modal";
+import { getEvents } from "~/packages/server/tools/getEvents";
+import { EventEmbed } from "./embeds/event";
+import { checkQuest } from "~/packages/server/mutations/checkQuest";
+import { createTool } from "@mastra/core";
+import { db } from "~/packages/db";
+import { passes, points, xp } from "~/packages/db/schema/public";
+import { sql } from "drizzle-orm";
 
 // import { createCommunity } from "~/packages/server/mutations/createCommunity";
 // import { getCommunity } from "~/packages/server/queries/getCommunity";
@@ -127,6 +135,96 @@ client.on("ready", () => {
 // }
 // });
 
+client.on("interactionCreate", async (interaction) => {
+    const type = interaction.id.split(":")[0];
+
+    if (!interaction.guild) {
+        if ("reply" in interaction) {
+            return interaction.reply({
+                ephemeral: true,
+                content: "Sorry, I can only interact in servers right now.",
+            });
+        }
+
+        return;
+    }
+
+    const community = await getCommunityFromServer({
+        server: interaction.guild.id,
+    });
+
+    if (!community) {
+        if ("reply" in interaction) {
+            return interaction.reply({
+                ephemeral: true,
+                content:
+                    "Community not found, please reach out to the server owner to finish setting up Dash.",
+            });
+        }
+
+        return;
+    }
+
+    let user = await getUser({
+        identifier: interaction.user.id,
+        platform: "discord",
+    });
+
+    if (!user) {
+        user = await createUser({
+            platform: "discord",
+            subject: interaction.user.id,
+            username: interaction.user.username,
+            name: interaction.user.displayName,
+            image: interaction.user.displayAvatarURL(),
+        });
+    }
+
+    if (type === "quest") {
+        const id = interaction.id.split(":")[1];
+        const action = interaction.id.split(":")[2];
+
+        if (interaction.isButton() && action === "check") {
+            const result = await checkQuest({
+                user: user.id,
+                quest: id,
+            });
+
+            await interaction.reply({
+                content: {
+                    claimed: `Quest claimed! You've earned ${result.xp}xp!`,
+                    "already-completed": "Looks like you already completed this quest!",
+                    "not-completed":
+                        "Doesn't look like you've completed all the actions for this quest yet.",
+                }[result.state],
+            });
+        }
+    }
+
+    if (type === "prediction") {
+        const id = interaction.id.split(":")[1];
+        const action = interaction.id.split(":")[2];
+
+        if (interaction.isButton() && action === "predict") {
+            const modal = Modal({
+                customId: `prediction:${id}:predict:modal`,
+                title: "Predict",
+                inputs: [
+                    Input({
+                        label: "Amount",
+                        customId: `prediction:${id}:predict:modal:amount`,
+                        placeholder: "Amount of gold to predict",
+                        required: true,
+                        style: "short",
+                    }),
+                ],
+            });
+
+            await interaction.showModal(modal);
+        }
+    }
+});
+
 client.on("messageCreate", async (message) => {
     try {
         if (message.author.bot || !client.user) return;
@@ -153,11 +251,11 @@ client.on("messageCreate", async (message) => {
         // const embeds: string[] = [];
 
         if (!message.guild?.id) {
-            return message.reply("Sorry, I can only reply in servers right now.");
+            return message.reply("Sorry, I can only chat in servers right now.");
         }
 
         const community = await getCommunityFromServer({
-            guild: message.guild.id,
+            server: message.guild.id,
         });
 
         if (!community) {
@@ -222,6 +320,124 @@ client.on("messageCreate", async (message) => {
                     content: message.content,
                 },
             ],
+            clientTools: {
+                channelSnapshot: createTool({
+                    id: "discord:channelSnapshot",
+                    description:
+                        "Take a snapshot of members in the channel and distribute xp and/or points",
+                    inputSchema: z.object({
+                        reason: z.string().optional().describe("The reason for the snapshot"),
+                        xp: z.number().describe("The amount of xp to distribute"),
+                        points: z.number().describe("The amount of points to distribute"),
+                    }),
+                    outputSchema: z
+                        .boolean()
+                        .describe("Whether the snapshot was taken successfully"),
+                    execute: async ({ context, runtimeContext }) => {
+                        await db.primary.transaction(async (tx) => {
+                            const user = runtimeContext.get("user") as DashRuntimeContext["user"];
+                            const community = runtimeContext.get(
+                                "community",
+                            ) as DashRuntimeContext["community"];
+
+                            if (!community) {
+                                throw new Error(
+                                    "Community is required to take Discord channel snapshots",
+                                );
+                            }
+
+                            if (
+                                !user.admin ||
+                                !community.admins.find((admin) => admin.user === user.id)
+                            ) {
+                                throw new Error("You are not authorized to take xp snapshots");
+                            }
+
+                            if (!message.channel.isVoiceBased()) {
+                                throw new Error("I can only take xp snapshots from voice channels");
+                            }
+
+                            if (context.xp === 0 && context.points === 0) {
+                                throw new Error(
+                                    "You must distribute at least 1 xp or 1 point to each user",
+                                );
+                            }
+
+                            const members = message.channel.members.map(
+                                (guildMember) => guildMember.user.id,
+                            );
+
+                            if (members.length === 0) {
+                                throw new Error("Nobody is in the channel");
+                            }
+
+                            let channelAccounts = await getMentionedAccounts({
+                                identifiers: members,
+                                platform: "discord",
+                            });
+
+                            const missingChannelAccounts = members.filter(
+                                (member) =>
+                                    !channelAccounts.find(
+                                        (account) => account.identifier === member,
+                                    ),
+                            );
+
+                            if (missingChannelAccounts.length > 0) {
+                                channelAccounts = await createAccounts({
+                                    identifiers: missingChannelAccounts,
+                                    platform: "discord",
+                                });
+                            }
+
+                            console.log("SNAPSHOT");
+                            console.log("channelAccounts", channelAccounts);
+                            console.log("context", context);
+
+                            // for (const account of channelAccounts) {
+                            // if (account.user) {
+                            //     if (context.xp) {
+                            //         // await tx.insert(xp).values({
+                            //         //     user: account.user?.id ?? null,
+                            //         //     amount: context.xp,
+                            //         //     community: community.id,
+                            //         // });
+                            //     }
+                            //     await tx
+                            //         .insert(passes)
+                            //         .values({
+                            //             user: user.id,
+                            //             xp: context.xp,
+                            //             points: context.points,
+                            //             community: community.id,
+                            //         })
+                            //         .onConflictDoUpdate({
+                            //             target: [passes.user, passes.community],
+                            //             set: {
+                            //                 xp: sql`${passes.xp} + ${context.xp}`,
+                            //                 points: sql`${passes.points} + ${context.points}`,
+                            //             },
+                            //         });
+                            // } else {
+                            //     await tx.insert(xp).values({
+                            //         user: account.id,
+                            //         amount: context.xp,
+                            //         community: community.id,
+                            //     });
+                            //     await tx.insert(points).values({
+                            //         to: account.id,
+                            //         amount: context.points,
+                            //         community: community.id,
+                            //     });
+                            // }
+                            // }
+                        });
+
+                        return true;
+                    },
+                }),
+            },
+
             experimental_output: z
                 .object({
                     text: z.string().describe("The text response to the user's message"),
@@ -230,6 +446,9 @@ client.on("messageCreate", async (message) => {
                     ),
                     predictions: getPredictions.outputSchema.describe(
                         "An array of predictions if requested / relevant to this response from the getPredictions tool call",
+                    ),
+                    events: getEvents.outputSchema.describe(
+                        "An array of events if requested / relevant to this response from the getEvents tool call",
                     ),
                 })
                 .required({
@@ -291,11 +510,11 @@ client.on("messageCreate", async (message) => {
             const prediction = response.object.predictions[i];
 
             const component = Row([
-                Button({
-                    label: "Predict",
-                    type: "primary",
-                    customId: `prediction:${prediction.id}:predict`,
-                }),
+                // Button({
+                //     label: "Predict",
+                //     type: "primary",
+                //     customId: `prediction:${prediction.id}:predict`,
+                // }),
                 Button({
                     label: "View",
                     type: "link",
@@ -304,6 +523,31 @@ client.on("messageCreate", async (message) => {
             ]);
 
             const embed = PredictionEmbed({ prediction });
+
+            if (i === 0) {
+                embeds.push(embed);
+                components.push(component);
+                continue;
+            }
+
+            additionalMessages.push({
+                components: [component],
+                embeds: [embed],
+            });
+        }
+
+        for (let i = 0; i < response.object.events.length; i++) {
+            const event = response.object.events[i];
+
+            const component = Row([
+                Button({
+                    label: "View",
+                    type: "link",
+                    url: `https://nouns.gg/events/${event.id}`,
+                }),
+            ]);
+
+            const embed = EventEmbed({ event });
 
             if (i === 0) {
                 embeds.push(embed);

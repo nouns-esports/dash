@@ -1,8 +1,8 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
-import type { DashRuntimeContext } from "../agents";
-import { db } from "../../../../db";
-import { predictions } from "../../../../db/schema/public";
+import type { DashRuntimeContext } from "../../agent/src/mastra/agents";
+import { db } from "~/packages/db";
+import { predictions } from "~/packages/db/schema/public";
 import { and, desc, eq } from "drizzle-orm";
 import { env } from "~/env";
 
