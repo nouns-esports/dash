@@ -70,9 +70,12 @@ export const dash = new Agent({
         const mentions = runtimeContext.get("mentions") as DashRuntimeContext["mentions"];
 
         console.log("INSTRUCTIONS");
-        console.log("mentions", mentions);
-        console.log("user", user);
-        console.log("community", community);
+        console.log(
+            "mentions",
+            mentions.map((mention) => mention.id),
+        );
+        console.log("user", user.name);
+        console.log("community", community?.handle);
 
         const boostedCommunities = user.passes.filter((pass) => pass.boosts > 0);
 
