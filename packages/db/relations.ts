@@ -70,6 +70,18 @@ export const eventsRelations = relations(events, ({ one, many }) => ({
     actions: many(eventActions),
 }));
 
+export const attendeesRelations = relations(attendees, ({ one, many }) => ({
+    event: one(events, {
+        fields: [attendees.event],
+        references: [events.id],
+    }),
+    user: one(users, {
+        fields: [attendees.user],
+        references: [users.id],
+    }),
+    xp: many(xp),
+}));
+
 export const eventActionsRelations = relations(eventActions, ({ one }) => ({
     event: one(events, {
         fields: [eventActions.event],
