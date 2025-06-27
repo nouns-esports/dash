@@ -56,6 +56,7 @@ export const mastra = new Mastra({
                         deprecated_details: null,
                         deprecated_featured: false,
                         connections: [],
+                        admins: [],
                         boosts: 0,
                         levels: null,
                         points: null,
@@ -72,6 +73,7 @@ export const mastra = new Mastra({
                         deprecated_twitter: null,
                         deprecated_discord: null,
                         deprecated_fid: null,
+                        admin: true,
                         accounts: [],
                         passes: [],
                     } satisfies DashRuntimeContext["user"]);

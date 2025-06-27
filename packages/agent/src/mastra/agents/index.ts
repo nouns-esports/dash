@@ -62,7 +62,7 @@ export const memory = new Memory({
 
 export const dash = new Agent({
     name: "Dash",
-    model: openai("gpt-4o-mini"),
+    model: openai("gpt-4.1"),
     instructions: async ({ runtimeContext }) => {
         const community = runtimeContext.get("community") as DashRuntimeContext["community"];
         const user = runtimeContext.get("user") as DashRuntimeContext["user"];
