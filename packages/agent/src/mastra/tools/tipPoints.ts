@@ -20,6 +20,13 @@ export const tipPoints = createTool({
 
             const mention = mentions[0];
 
+            console.log("TIPPING POINTS");
+            console.log("amount", context.amount);
+            console.log("mentions", mentions);
+            console.log("mention", mention);
+            console.log("user", user);
+            console.log("community", community);
+
             if (!mention) {
                 throw new Error("You must mention a user to tip points to");
             }
