@@ -5,6 +5,7 @@ import { Memory } from "@mastra/memory";
 import {
     accounts,
     communities,
+    communityAdmins,
     communityConnections,
     passes,
     users,
@@ -14,8 +15,8 @@ import { env } from "../../../../../env";
 import { platforms, type Platforms } from "../../../../platforms";
 
 // Internal Tools
-import { tipPoints } from "../tools/tipPoints";
-import { getLevel } from "~/packages/server/utils/getLevel";
+import { tipPoints } from "../../../../server/tools/tipPoints";
+import { getLevel } from "../../../../../packages/server/utils/getLevel";
 import { getQuests } from "../tools/getQuests";
 import { getPredictions } from "../tools/getPredictions";
 
@@ -24,6 +25,7 @@ export type DashRuntimeContext = {
     platform?: Platforms;
     community?: typeof communities.$inferSelect & {
         connections: (typeof communityConnections.$inferSelect)[];
+        admins: (typeof communityAdmins.$inferSelect)[];
         boosts: number;
     };
     room: string;
@@ -66,6 +68,11 @@ export const dash = new Agent({
         const user = runtimeContext.get("user") as DashRuntimeContext["user"];
         const platform = runtimeContext.get("platform") as DashRuntimeContext["platform"];
         const mentions = runtimeContext.get("mentions") as DashRuntimeContext["mentions"];
+
+        console.log("INSTRUCTIONS");
+        console.log("mentions", mentions);
+        console.log("user", user);
+        console.log("community", community);
 
         const boostedCommunities = user.passes.filter((pass) => pass.boosts > 0);
 
@@ -118,6 +125,10 @@ export const dash = new Agent({
 
         for (const connection of community.connections) {
             const platform = platforms[connection.platform];
+
+            if (!platform.tools) {
+                continue;
+            }
 
             for (const [id, tool] of Object.entries(platform.tools)) {
                 availableTools[id] = tool as ReturnType<typeof createTool>;
