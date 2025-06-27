@@ -4,3 +4,6 @@ nixPkgs = ["bun"]
 
 [phases.install]
 cmds = ["bun install"]
+
+[provider]
+name = "custom"
