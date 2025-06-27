@@ -6,7 +6,7 @@ import { events } from "~/packages/db/schema/public";
 import { and, desc, eq } from "drizzle-orm";
 
 export const getEvents = createTool({
-    id: "internal:getEvents",
+    id: "getEvents",
     description: "Get events for a community",
     inputSchema: z.object({
         community: z.string().describe("The id of the community"),

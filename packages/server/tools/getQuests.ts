@@ -6,7 +6,7 @@ import { z } from "zod";
 import type { DashRuntimeContext } from "../../agent/src/mastra/agents";
 
 export const getQuests = createTool({
-    id: "internal:getQuests",
+    id: "getQuests",
     description: "Get quest(s) for a community",
     inputSchema: z.object({
         completed: z.boolean().optional().describe("If the quest was completed by the user"),

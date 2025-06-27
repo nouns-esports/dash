@@ -6,7 +6,7 @@ import { escrows, passes, points } from "../../db/schema/public";
 import type { DashRuntimeContext } from "../../agent/src/mastra/agents";
 
 export const tipPoints = createTool({
-    id: "internal:tipPoints",
+    id: "tipPoints",
     description: "Send or tip points to another user in the same community",
     inputSchema: z.object({
         amount: z.number().describe("The number of points to tip"),

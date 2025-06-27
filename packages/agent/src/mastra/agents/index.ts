@@ -134,7 +134,9 @@ export const dash = new Agent({
             }
 
             for (const [id, tool] of Object.entries(platform.tools)) {
-                availableTools[id] = tool as ReturnType<typeof createTool>;
+                availableTools[`${connection.platform}:${id}`] = tool as ReturnType<
+                    typeof createTool
+                >;
             }
         }
 

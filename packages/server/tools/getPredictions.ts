@@ -7,7 +7,7 @@ import { and, desc, eq } from "drizzle-orm";
 import { env } from "~/env";
 
 export const getPredictions = createTool({
-    id: "internal:getPredictions",
+    id: "getPredictions",
     description: "Get predictions for a community or event",
     inputSchema: z.object({
         community: z.string().describe("The id of the community"),
