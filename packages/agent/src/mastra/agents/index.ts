@@ -19,6 +19,7 @@ import { tipPoints } from "~/packages/server/tools/tipPoints";
 import { getLevel } from "~/packages/server/utils/getLevel";
 import { getQuests } from "~/packages/server/tools/getQuests";
 import { getPredictions } from "~/packages/server/tools/getPredictions";
+import { getEvents } from "~/packages/server/tools/getEvents";
 
 // When update this type, remember to migrate any existing thread metadata on mastra.mastra_threads.metadata
 export type DashRuntimeContext = {
