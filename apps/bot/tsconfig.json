@@ -1,0 +1,12 @@
+{
+    "extends": "../../tsconfig.json",
+    "moduleResolution": "node",
+    "verbatimModuleSyntax": false,
+    "compilerOptions": {
+        "baseUrl": ".",
+        "paths": {
+            "@/*": ["./*"],
+            "~/*": ["../../*"]
+        }
+    }
+}
