@@ -1,11 +1,11 @@
 {
-	"name": "bot",
-	"private": true,
-	"dependencies": {
-		"discord.js": "^14.19.3",
-		"zod": "^3.25.23"
-	},
-	"scripts": {
-		"start": "bun --env-file=../../.env.production"
-	}
+    "name": "bot",
+    "private": true,
+    "dependencies": {
+        "discord.js": "^14.21.0",
+        "zod": "^3.25.23"
+    },
+    "scripts": {
+        "start": "bun --env-file=../../.env.production"
+    }
 }
