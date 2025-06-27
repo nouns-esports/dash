@@ -15,7 +15,7 @@
         "@t3-oss/env-nextjs": "^0.13.8"
     },
     "engines": {
-        "bun": "1.2.17"
+        "bun": ">=1.2.16"
     },
     "type": "module",
     "packageManager": "bun@1.2.17",
