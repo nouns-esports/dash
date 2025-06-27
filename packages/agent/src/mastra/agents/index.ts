@@ -140,7 +140,7 @@ export const dash = new Agent({
             }
         }
 
-        return { ...availableTools, tipPoints, getQuests, getPredictions };
+        return { ...availableTools, tipPoints, getQuests, getPredictions, getEvents };
     },
     memory,
 });
