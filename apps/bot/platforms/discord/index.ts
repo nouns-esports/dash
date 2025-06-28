@@ -13,7 +13,7 @@ import { randomUUID } from "crypto";
 import { RuntimeContext } from "@mastra/core/runtime-context";
 import { Row } from "./components/row";
 import { Button } from "./components/button";
-import type { Select } from "./components/select";
+import { Select } from "./components/select";
 import type { Embed } from "./components/embed";
 import { QuestEmbed } from "./embeds/quest";
 import { PredictionEmbed } from "./embeds/prediction";
@@ -27,6 +27,7 @@ import { createTool } from "@mastra/core";
 import { db } from "~/packages/db";
 import { passes, points, xp } from "~/packages/db/schema/public";
 import { sql } from "drizzle-orm";
+import { getPrediction } from "~/packages/server/queries/getPrediction";
 
 // import { createCommunity } from "~/packages/server/mutations/createCommunity";
 // import { getCommunity } from "~/packages/server/queries/getCommunity";
@@ -205,22 +206,57 @@ client.on("interactionCreate", async (interaction) => {
         const id = interaction.id.split(":")[1];
         const action = interaction.id.split(":")[2];
 
+        const prediction = await getPrediction({
+            id,
+            user: user.id,
+        });
+
+        if (!prediction) {
+            if ("reply" in interaction) {
+                return interaction.reply({
+                    content: "Prediction not found",
+                    ephemeral: true,
+                });
+            }
+
+            return;
+        }
+
+        if (interaction.isStringSelectMenu() && action === `prediction:${prediction.id}:predict`) {
+            const selectedOutcome = interaction.values[0];
+
+            const outcome = prediction.outcomes.find((outcome) => outcome.id === selectedOutcome);
+
+            if (!outcome) {
+                return interaction.reply({
+                    content: "Outcome not found",
+                    ephemeral: true,
+                });
+            }
+
+            await interaction.reply({
+                content: `Successfully placed your prediction for ${outcome.name}`,
+            });
+        }
+
         if (interaction.isButton() && action === "predict") {
-            const modal = Modal({
-                customId: `prediction:${id}:predict:modal`,
-                title: "Predict",
-                inputs: [
-                    Input({
-                        label: "Amount",
-                        customId: `prediction:${id}:predict:modal:amount`,
-                        placeholder: "Amount of gold to predict",
-                        required: true,
-                        style: "short",
-                    }),
+            await interaction.reply({
+                content: "Choose an outcome for your prediction",
+                ephemeral: true,
+                components: [
+                    Row([
+                        Select({
+                            customId: `prediction:${prediction.id}:predict`,
+                            placeholder: "Select outcome",
+                            maxValues: 1,
+                            options: prediction.outcomes.map((outcome) => ({
+                                label: outcome.name,
+                                value: outcome.id,
+                            })),
+                        }),
+                    ]).toJSON(),
                 ],
             });
-
-            await interaction.showModal(modal);
         }
     }
 });
@@ -510,11 +546,11 @@ client.on("messageCreate", async (message) => {
             const prediction = response.object.predictions[i];
 
             const component = Row([
-                // Button({
-                //     label: "Predict",
-                //     type: "primary",
-                //     customId: `prediction:${prediction.id}:predict`,
-                // }),
+                Button({
+                    label: "Predict",
+                    type: "primary",
+                    customId: `prediction:${prediction.id}:predict`,
+                }),
                 Button({
                     label: "View",
                     type: "link",
