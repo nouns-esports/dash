@@ -27,7 +27,6 @@ export type DashRuntimeContext = {
     community?: typeof communities.$inferSelect & {
         connections: (typeof communityConnections.$inferSelect)[];
         admins: (typeof communityAdmins.$inferSelect)[];
-        boosts: number;
     };
     room: string;
     user: typeof users.$inferSelect & {
