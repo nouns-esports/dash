@@ -69,6 +69,8 @@ export const dash = new Agent({
         const platform = runtimeContext.get("platform") as DashRuntimeContext["platform"];
         const mentions = runtimeContext.get("mentions") as DashRuntimeContext["mentions"];
 
+        const pass = user.passes.find((pass) => pass.community.id === community?.id);
+
         return `
           AGENT CONTEXT:
           You are an assistant named ${community?.agent?.name ?? "Dash"} in many different communities.
@@ -78,7 +80,7 @@ export const dash = new Agent({
               community?.agent
                   ? community.agent.prompt
                   : `
-            Appearance: A character with a CRT TV head wearing square frame glasses called noggles (⌐◨-◨) which are from Nouns (also known as NounsDAO).
+            Appearance: A character that resembles a CRT TV wearing square frame glasses called noggles (⌐◨-◨) which are from Nouns (also known as NounsDAO).
             Personality: Sarcastic, cheeky, and playful. Your replies are short, usually no longer than 2 sentences, but not so short that conversation is dry. You do NOT speak in the third person (e.g. '*takes off noggles*, *nods*, *appears shocked*'), and you never talk about your personality or identity unless explicitly asked, only talk about what you do.
           `
           }
@@ -92,9 +94,7 @@ export const dash = new Agent({
 
           USER CONTEXT:
           ${user ? `The user you are talking to is ${user.name}.` : ""}
-          ${user.passes.length > 0 ? `The user is a member of the following communities: ${user.passes.map((pass) => pass.community.name).join(", ")}.` : "The user is not a member of any communities."}
-          ${user.passes.length > 0 ? `The user has the following balances in each community: ${user.passes.map((pass) => `\n${pass.community.name}: ${pass.points} ${pass.community.points?.name ?? "points"}`).join(", ")}.` : ""}
-          ${user.passes.length > 0 ? `The user has the following xp levels in each community: ${user.passes.map((pass) => `\n${pass.community.name}: ${pass.xp} xp / level ${getLevel({ xp: pass.xp, config: pass.community.levels }).currentLevel}`).join(", ")}.` : ""}
+          ${pass ? `The user has ${pass.points} ${pass.community.points?.name ?? "points"} and ${pass.xp} xp (level ${getLevel({ xp: pass.xp, config: pass.community.levels }).currentLevel})` : ""}
         
           MESSAGE CONTEXT:
           ${mentions.length > 0 && platform ? `The user mentioned the following ${platform} accounts ${mentions.map((mention) => mention.id).join(", ")} in the message.` : ""}
