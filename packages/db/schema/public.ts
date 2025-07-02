@@ -110,8 +110,6 @@ export const passes = pgTable(
         id: t.uuid().primaryKey().defaultRandom(),
         community: t.uuid().notNull(),
         user: t.uuid().notNull(),
-        // The number of boosts the user has on this community
-        boosts: t.integer().notNull().default(0),
         points: t.numeric({ precision: 38, scale: 18, mode: "number" }).notNull().default(0),
         xp: t.bigint({ mode: "number" }).notNull().default(0),
     }),
@@ -119,12 +117,28 @@ export const passes = pgTable(
         unique("passes_user_community_unique").on(t.user, t.community),
         index("passes_xp_idx").on(t.xp),
         index("passes_points_idx").on(t.points),
-        index("passes_boosts_idx").on(t.boosts),
         check("points_balance", sql`${t.points} >= 0`),
     ],
 );
 
-// Create points and xp records on claim
+// export const charges = pgTable(
+//     "charges",
+//     (t) => ({
+//         id: t.uuid().primaryKey().defaultRandom(),
+//         user: t.uuid().notNull(),
+//         community: t.uuid().notNull(),
+//         payer: t.uuid().notNull(),
+//         count: t.integer().notNull(),
+//         timestamp: t.timestamp().notNull().defaultNow(),
+//         expires: t.timestamp().notNull(),
+//         renew: t.boolean().notNull(),
+//     }),
+//     (t) => [
+//         unique("charges_user_community_unique").on(t.user, t.community, t.payer),
+//         check("count_positive", sql`${t.count} > 0`),
+//     ],
+// );
+
 export const escrows = pgTable(
     "escrows",
     (t) => ({
@@ -246,6 +260,7 @@ export const predictions = pgTable(
         image: t.text().notNull(),
         rules: t.jsonb().$type<any>().notNull(),
         xp: t.integer().notNull(),
+        // points: t.integer().notNull().default(0), // NEW
         closed: t.boolean().notNull().default(false),
         resolved: t.boolean().notNull().default(false),
         start: t.timestamp(),

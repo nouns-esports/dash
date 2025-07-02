@@ -519,6 +519,7 @@ client.on("messageCreate", async (message) => {
                 Button({
                     label: "Check",
                     type: "primary",
+                    disabled: true,
                     customId: `quest:${quest.id}:check`,
                 }),
                 Button({
@@ -549,6 +550,7 @@ client.on("messageCreate", async (message) => {
                 Button({
                     label: "Predict",
                     type: "primary",
+                    disabled: true,
                     customId: `prediction:${prediction.id}:predict`,
                 }),
                 Button({
@@ -576,6 +578,12 @@ client.on("messageCreate", async (message) => {
             const event = response.object.events[i];
 
             const component = Row([
+                Button({
+                    label: "Register",
+                    type: "primary",
+                    disabled: true,
+                    customId: `event:${event.id}:register`,
+                }),
                 Button({
                     label: "View",
                     type: "link",
