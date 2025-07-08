@@ -493,8 +493,8 @@ client.on("messageCreate", async (message) => {
 
         await message.reply({
             content: response.object.text,
-            components: replyMessage.components.map((component) => component.toJSON()),
-            embeds: replyMessage.embeds.map((embed) => embed.toJSON()),
+            components: replyMessage?.components.map((component) => component.toJSON()) ?? [],
+            embeds: replyMessage?.embeds.map((embed) => embed.toJSON()) ?? [],
         });
 
         for (const additionalMessage of additionalMessages) {
