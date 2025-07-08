@@ -360,6 +360,7 @@ client.on("messageCreate", async (message) => {
             clientTools: {
                 channelSnapshot: channelSnapshot(message),
             },
+            runtimeContext,
             experimental_output: z
                 .object({
                     text: z.string().describe("The text response to the user's message"),
