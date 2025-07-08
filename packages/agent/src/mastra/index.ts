@@ -31,18 +31,18 @@ export const mastra = new Mastra({
                     "runtimeContext",
                 ) as RuntimeContext<DashRuntimeContext>;
 
-                const runtimeContextHeader = c.req.header("X-Runtime-Context");
+                // const runtimeContextHeader = c.req.header("X-Runtime-Context");
 
-                if (runtimeContextHeader) {
-                    const parsed = JSON.parse(
-                        Buffer.from(runtimeContextHeader, "base64").toString("utf8"),
-                    ) as DashRuntimeContext;
-                    runtimeContext.set("platform", parsed.platform);
-                    runtimeContext.set("room", parsed.room);
-                    runtimeContext.set("community", parsed.community);
-                    runtimeContext.set("user", parsed.user);
-                    runtimeContext.set("mentions", parsed.mentions);
-                }
+                // if (runtimeContextHeader) {
+                //     const parsed = JSON.parse(
+                //         Buffer.from(runtimeContextHeader, "base64").toString("utf8"),
+                //     ) as DashRuntimeContext;
+                //     runtimeContext.set("platform", parsed.platform);
+                //     runtimeContext.set("room", parsed.room);
+                //     runtimeContext.set("community", parsed.community);
+                //     runtimeContext.set("user", parsed.user);
+                //     runtimeContext.set("mentions", parsed.mentions);
+                // }
 
                 if (env.NEXT_PUBLIC_ENVIRONMENT === "dev") {
                     runtimeContext.set("community", {
@@ -57,7 +57,6 @@ export const mastra = new Mastra({
                         deprecated_featured: false,
                         connections: [],
                         admins: [],
-                        boosts: 0,
                         levels: null,
                         points: null,
                     } satisfies DashRuntimeContext["community"]);

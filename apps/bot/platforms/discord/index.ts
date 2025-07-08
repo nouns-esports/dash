@@ -1,10 +1,10 @@
-import { ActionRowBuilder, Client, StringSelectMenuBuilder } from "discord.js";
+import { ActionRowBuilder, Client, StringSelectMenuBuilder, type Interaction } from "discord.js";
 import { env } from "~/env";
 import { mastraClient } from "~/packages/server/clients/mastra";
 import z from "zod";
 import { type DashRuntimeContext } from "~/packages/agent/src/mastra/agents";
 import { getCommunityFromServer } from "~/packages/server/queries/getCommunityFromServer";
-import { getUser } from "~/packages/server/queries/getUser";
+import { getUser, type User } from "~/packages/server/queries/getUser";
 import { createUser } from "~/packages/server/mutations/createUser";
 import { createHash } from "crypto";
 import { getMentionedAccounts } from "~/packages/server/queries/getMentionedAccounts";
@@ -22,12 +22,20 @@ import { getPredictions } from "~/packages/server/tools/getPredictions";
 import { Input, Modal } from "./components/modal";
 import { getEvents } from "~/packages/server/tools/getEvents";
 import { EventEmbed } from "./embeds/event";
-import { checkQuest } from "~/packages/server/mutations/checkQuest";
 import { createTool } from "@mastra/core";
 import { db } from "~/packages/db";
 import { passes, points, xp } from "~/packages/db/schema/public";
 import { sql } from "drizzle-orm";
 import { getPrediction } from "~/packages/server/queries/getPrediction";
+import { channelSnapshot } from "./tools/channelSnapshot";
+import { getRaffles } from "~/packages/server/tools/getRaffles";
+import { getRounds } from "~/packages/server/tools/getRounds";
+import { getProducts } from "~/packages/server/tools/getProducts";
+import { RaffleEmbed } from "./embeds/raffle";
+import { RoundEmbed } from "./embeds/round";
+import { ProductEmbed } from "./embeds/product";
+import type { Community } from "~/packages/server/mutations/createCommunity";
+import { checkQuest } from "~/packages/server/mutations/checkQuest";
 
 // import { createCommunity } from "~/packages/server/mutations/createCommunity";
 // import { getCommunity } from "~/packages/server/queries/getCommunity";
@@ -284,7 +292,8 @@ client.on("messageCreate", async (message) => {
         const room = message.channel.isDMBased()
             ? `dm:${message.author.id}`
             : `channel:${message.channel.id}`;
-        // const embeds: string[] = [];
+
+        // const embeds: string[] = []; add to runtimeContext
 
         if (!message.guild?.id) {
             return message.reply("Sorry, I can only chat in servers right now.");
@@ -331,23 +340,15 @@ client.on("messageCreate", async (message) => {
             });
         }
 
-        const runtimeContext: DashRuntimeContext = {
-            platform: "discord",
-            room,
-            community,
-            user,
-            mentions: mentionedAccounts,
-        };
+        const agent = mastraClient.getAgent("dash");
 
-        const agent = mastraClient(runtimeContext).getAgent("dash");
+        const runtimeContext = new RuntimeContext<DashRuntimeContext>();
 
-        // const runtimeContext = new RuntimeContext<DashRuntimeContext>()
-
-        // runtimeContext.set("platform", "discord");
-        // runtimeContext.set("room", room);
-        // runtimeContext.set("community", community);
-        // runtimeContext.set("user", user);
-        // runtimeContext.set("mentions", mentionedAccounts);
+        runtimeContext.set("platform", "discord");
+        runtimeContext.set("room", room);
+        runtimeContext.set("community", community);
+        runtimeContext.set("user", user);
+        runtimeContext.set("mentions", mentionedAccounts);
 
         const response = await agent.generate({
             messages: [
@@ -357,258 +358,142 @@ client.on("messageCreate", async (message) => {
                 },
             ],
             clientTools: {
-                channelSnapshot: createTool({
-                    id: "discord:channelSnapshot",
-                    description:
-                        "Take a snapshot of members in the channel and distribute xp and/or points",
-                    inputSchema: z.object({
-                        reason: z.string().optional().describe("The reason for the snapshot"),
-                        xp: z.number().describe("The amount of xp to distribute"),
-                        points: z.number().describe("The amount of points to distribute"),
-                    }),
-                    outputSchema: z
-                        .boolean()
-                        .describe("Whether the snapshot was taken successfully"),
-                    execute: async ({ context, runtimeContext }) => {
-                        await db.primary.transaction(async (tx) => {
-                            const user = runtimeContext.get("user") as DashRuntimeContext["user"];
-                            const community = runtimeContext.get(
-                                "community",
-                            ) as DashRuntimeContext["community"];
-
-                            if (!community) {
-                                throw new Error(
-                                    "Community is required to take Discord channel snapshots",
-                                );
-                            }
-
-                            if (
-                                !user.admin ||
-                                !community.admins.find((admin) => admin.user === user.id)
-                            ) {
-                                throw new Error("You are not authorized to take xp snapshots");
-                            }
-
-                            if (!message.channel.isVoiceBased()) {
-                                throw new Error("I can only take xp snapshots from voice channels");
-                            }
-
-                            if (context.xp === 0 && context.points === 0) {
-                                throw new Error(
-                                    "You must distribute at least 1 xp or 1 point to each user",
-                                );
-                            }
-
-                            const members = message.channel.members.map(
-                                (guildMember) => guildMember.user.id,
-                            );
-
-                            if (members.length === 0) {
-                                throw new Error("Nobody is in the channel");
-                            }
-
-                            let channelAccounts = await getMentionedAccounts({
-                                identifiers: members,
-                                platform: "discord",
-                            });
-
-                            const missingChannelAccounts = members.filter(
-                                (member) =>
-                                    !channelAccounts.find(
-                                        (account) => account.identifier === member,
-                                    ),
-                            );
-
-                            if (missingChannelAccounts.length > 0) {
-                                channelAccounts = await createAccounts({
-                                    identifiers: missingChannelAccounts,
-                                    platform: "discord",
-                                });
-                            }
-
-                            console.log("SNAPSHOT");
-                            console.log("channelAccounts", channelAccounts);
-                            console.log("context", context);
-
-                            // for (const account of channelAccounts) {
-                            // if (account.user) {
-                            //     if (context.xp) {
-                            //         // await tx.insert(xp).values({
-                            //         //     user: account.user?.id ?? null,
-                            //         //     amount: context.xp,
-                            //         //     community: community.id,
-                            //         // });
-                            //     }
-                            //     await tx
-                            //         .insert(passes)
-                            //         .values({
-                            //             user: user.id,
-                            //             xp: context.xp,
-                            //             points: context.points,
-                            //             community: community.id,
-                            //         })
-                            //         .onConflictDoUpdate({
-                            //             target: [passes.user, passes.community],
-                            //             set: {
-                            //                 xp: sql`${passes.xp} + ${context.xp}`,
-                            //                 points: sql`${passes.points} + ${context.points}`,
-                            //             },
-                            //         });
-                            // } else {
-                            //     await tx.insert(xp).values({
-                            //         user: account.id,
-                            //         amount: context.xp,
-                            //         community: community.id,
-                            //     });
-                            //     await tx.insert(points).values({
-                            //         to: account.id,
-                            //         amount: context.points,
-                            //         community: community.id,
-                            //     });
-                            // }
-                            // }
-                        });
-
-                        return true;
-                    },
-                }),
+                channelSnapshot: channelSnapshot(message),
             },
-
             experimental_output: z
                 .object({
                     text: z.string().describe("The text response to the user's message"),
-                    quests: getQuests.outputSchema.describe(
-                        "An array of quests if requested / relevant to this response from the getQuests tool call",
-                    ),
-                    predictions: getPredictions.outputSchema.describe(
-                        "An array of predictions if requested / relevant to this response from the getPredictions tool call",
-                    ),
-                    events: getEvents.outputSchema.describe(
-                        "An array of events if requested / relevant to this response from the getEvents tool call",
-                    ),
+                    embeds: z
+                        .array(
+                            z.union([
+                                z.object({
+                                    type: z.literal("quest"),
+                                    quest: getQuests.outputSchema.element.describe(
+                                        "Quests returned from the getQuests tool call",
+                                    ),
+                                }),
+                                z.object({
+                                    type: z.literal("prediction"),
+                                    prediction: getPredictions.outputSchema.element.describe(
+                                        "Predictions returned from the getPredictions tool call",
+                                    ),
+                                }),
+                                z.object({
+                                    type: z.literal("event"),
+                                    event: getEvents.outputSchema.element.describe(
+                                        "Events returned from the getEvents tool call",
+                                    ),
+                                }),
+                                z.object({
+                                    type: z.literal("raffle"),
+                                    raffle: getRaffles.outputSchema.element.describe(
+                                        "Raffles returned from the getRaffles tool call",
+                                    ),
+                                }),
+                                z.object({
+                                    type: z.literal("round"),
+                                    round: getRounds.outputSchema.element.describe(
+                                        "Rounds returned from the getRounds tool call",
+                                    ),
+                                }),
+                                z.object({
+                                    type: z.literal("product"),
+                                    product: getProducts.outputSchema.element.describe(
+                                        "Products returned from the getProducts tool call",
+                                    ),
+                                }),
+                            ]),
+                        )
+                        .max(3)
+                        .describe("An array of embeds if requested / relevant to this response"),
                 })
                 .required({
                     text: true,
-                    quests: true,
-                    predictions: true,
+                    embeds: true,
                 }),
             memory: {
                 thread: {
                     id: randomUUID(),
                     resourceId: user.id,
-                    metadata: runtimeContext,
+                    metadata: {
+                        platform: "discord",
+                        room,
+                        community,
+                        user,
+                        mentions: mentionedAccounts,
+                    },
                 },
                 resource: user.id,
             },
         });
 
-        // TODO: Standardize quest responses with embeds concept making a quest a single embed type like url, image, or video
-        // TODO: Parse the user prompt embeds for nouns.gg or dash urls that might contain embeds like quests or predictions and auto converted into their respective components
-        const components: Array<ReturnType<typeof Row>> = [];
-        const embeds: Array<ReturnType<typeof Embed>> = [];
-
-        const additionalMessages: Array<{
+        const messages: Array<{
             components: Array<ReturnType<typeof Row>>;
             embeds: Array<ReturnType<typeof Embed>>;
         }> = [];
 
-        for (let i = 0; i < response.object.quests.length; i++) {
-            const quest = response.object.quests[i];
+        for (const embed of response.object.embeds) {
+            if (embed.type === "quest") {
+                const quest = QuestEmbed({ quest: embed.quest });
 
-            const component = Row([
-                Button({
-                    label: "Check",
-                    type: "primary",
-                    disabled: true,
-                    customId: `quest:${quest.id}:check`,
-                }),
-                Button({
-                    label: "View",
-                    type: "link",
-                    url: `https://nouns.gg/quests/${quest.id}`,
-                }),
-            ]);
-
-            const embed = QuestEmbed({ quest });
-
-            if (i === 0) {
-                embeds.push(embed);
-                components.push(component);
-                continue;
+                messages.push({
+                    components: quest.components,
+                    embeds: [quest.embed],
+                });
             }
 
-            additionalMessages.push({
-                components: [component],
-                embeds: [embed],
-            });
-        }
+            if (embed.type === "prediction") {
+                const prediction = PredictionEmbed({ prediction: embed.prediction });
 
-        for (let i = 0; i < response.object.predictions.length; i++) {
-            const prediction = response.object.predictions[i];
-
-            const component = Row([
-                Button({
-                    label: "Predict",
-                    type: "primary",
-                    disabled: true,
-                    customId: `prediction:${prediction.id}:predict`,
-                }),
-                Button({
-                    label: "View",
-                    type: "link",
-                    url: `https://nouns.gg/predictions/${prediction.id}`,
-                }),
-            ]);
-
-            const embed = PredictionEmbed({ prediction });
-
-            if (i === 0) {
-                embeds.push(embed);
-                components.push(component);
-                continue;
+                messages.push({
+                    components: prediction.components,
+                    embeds: [prediction.embed],
+                });
             }
 
-            additionalMessages.push({
-                components: [component],
-                embeds: [embed],
-            });
-        }
+            if (embed.type === "event") {
+                const event = EventEmbed({ event: embed.event });
 
-        for (let i = 0; i < response.object.events.length; i++) {
-            const event = response.object.events[i];
-
-            const component = Row([
-                Button({
-                    label: "Register",
-                    type: "primary",
-                    disabled: true,
-                    customId: `event:${event.id}:register`,
-                }),
-                Button({
-                    label: "View",
-                    type: "link",
-                    url: `https://nouns.gg/events/${event.id}`,
-                }),
-            ]);
-
-            const embed = EventEmbed({ event });
-
-            if (i === 0) {
-                embeds.push(embed);
-                components.push(component);
-                continue;
+                messages.push({
+                    components: event.components,
+                    embeds: [event.embed],
+                });
             }
 
-            additionalMessages.push({
-                components: [component],
-                embeds: [embed],
-            });
+            if (embed.type === "raffle") {
+                const raffle = RaffleEmbed({ raffle: embed.raffle });
+
+                messages.push({
+                    components: raffle.components,
+                    embeds: [raffle.embed],
+                });
+            }
+
+            if (embed.type === "round") {
+                const round = RoundEmbed({ round: embed.round });
+
+                messages.push({
+                    components: round.components,
+                    embeds: [round.embed],
+                });
+            }
+
+            if (embed.type === "product") {
+                const product = ProductEmbed({ product: embed.product });
+
+                messages.push({
+                    components: product.components,
+                    embeds: [product.embed],
+                });
+            }
         }
+
+        const [replyMessage, ...additionalMessages] = messages;
 
         await message.reply({
             content: response.object.text,
-            components: components.map((component) => component.toJSON()),
-            embeds: embeds.map((embed) => embed.toJSON()),
+            components: replyMessage.components.map((component) => component.toJSON()),
+            embeds: replyMessage.embeds.map((embed) => embed.toJSON()),
         });
 
         for (const additionalMessage of additionalMessages) {

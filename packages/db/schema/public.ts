@@ -449,3 +449,43 @@ export const votes = pgTable("votes", (t) => ({
     count: t.smallint().notNull(),
     timestamp: t.timestamp().notNull().defaultNow(),
 }));
+
+export const raffles = pgTable(
+    "raffles",
+    (t) => ({
+        id: t.uuid().primaryKey().defaultRandom(),
+        handle: t.text().notNull(),
+        name: t.text().notNull(),
+        description: t.jsonb().$type<any>().notNull(),
+        images: t.text().array().notNull(),
+        start: t.timestamp().notNull(),
+        end: t.timestamp().notNull(),
+        gold: t.integer().notNull(),
+        winners: t.integer().notNull(),
+        limit: t.integer(),
+        event: t.uuid(),
+        community: t.uuid().notNull(),
+        draft: t.boolean().notNull().default(true),
+        entryActions: t.text("entry_actions").array(),
+        entryActionInputs: t
+            .jsonb("entry_action_inputs")
+            .array()
+            .$type<Array<{ [key: string]: any }>>(),
+    }),
+    (t) => [unique("raffles_handle_community_unique").on(t.handle, t.community)],
+);
+
+export const raffleEntries = pgTable("raffle_entries", (t) => ({
+    id: t.uuid().primaryKey().defaultRandom(),
+    raffle: t.uuid().notNull(),
+    user: t.uuid().notNull(),
+    timestamp: t.timestamp().notNull().defaultNow(),
+    amount: t.integer().notNull(),
+    winner: t.boolean().notNull().default(false),
+}));
+
+export const nounsvitationalVotes = pgTable("nounsvitational_votes", (t) => ({
+    id: t.uuid().primaryKey().defaultRandom(),
+    user: t.uuid().notNull(),
+    count: t.integer().notNull(),
+}));

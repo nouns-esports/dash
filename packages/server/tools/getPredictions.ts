@@ -2,7 +2,7 @@ import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 import type { DashRuntimeContext } from "../../agent/src/mastra/agents";
 import { db } from "~/packages/db";
-import { predictions } from "~/packages/db/schema/public";
+import { bets, predictions } from "~/packages/db/schema/public";
 import { and, desc, eq } from "drizzle-orm";
 import { env } from "~/env";
 
@@ -38,6 +38,7 @@ export const getPredictions = createTool({
                         .boolean()
                         .nullable()
                         .describe("If not null, the result of the outcome"),
+                    userBet: z.boolean().describe("If the user bet on this outcome"),
                 }),
             ),
         }),
@@ -57,7 +58,14 @@ export const getPredictions = createTool({
             ),
             orderBy: desc(predictions.start),
             with: {
-                outcomes: true,
+                outcomes: {
+                    with: {
+                        bets: {
+                            where: eq(bets.user, user.id),
+                            limit: 1,
+                        },
+                    },
+                },
             },
             limit: context.limit ?? 3,
         });
@@ -77,6 +85,7 @@ export const getPredictions = createTool({
                 pool: outcome.pool,
                 odds: (outcome.pool / prediction.pool) * 100,
                 result: outcome.result,
+                userBet: outcome.bets.length > 0,
             })),
         }));
     },

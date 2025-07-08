@@ -1,11 +1,9 @@
 import { MastraClient } from "@mastra/client-js";
 import { env } from "~/env";
-import type { DashRuntimeContext } from "~/packages/agent/src/mastra/agents";
 
-export const mastraClient = (runtimeContext: DashRuntimeContext) => new MastraClient({
+export const mastraClient = new MastraClient({
     baseUrl: env.MASTRA_SERVER,
     headers: {
-        "Authorization": `Bearer ${env.AGENT_TOKEN}`,
-        "X-Runtime-Context": Buffer.from(JSON.stringify(runtimeContext), 'utf8').toString('base64')
-    }
+        Authorization: `Bearer ${env.AGENT_TOKEN}`,
+    },
 });

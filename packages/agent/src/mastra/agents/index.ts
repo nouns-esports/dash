@@ -20,6 +20,10 @@ import { getLevel } from "~/packages/server/utils/getLevel";
 import { getQuests } from "~/packages/server/tools/getQuests";
 import { getPredictions } from "~/packages/server/tools/getPredictions";
 import { getEvents } from "~/packages/server/tools/getEvents";
+import { getProducts } from "~/packages/server/tools/getProducts";
+import { getRounds } from "~/packages/server/tools/getRounds";
+import { getRaffles } from "~/packages/server/tools/getRaffles";
+import { purchaseVotes } from "~/packages/server/tools/purchaseVotes";
 
 // When update this type, remember to migrate any existing thread metadata on mastra.mastra_threads.metadata
 export type DashRuntimeContext = {
@@ -123,7 +127,17 @@ export const dash = new Agent({
             }
         }
 
-        return { ...availableTools, tipPoints, getQuests, getPredictions, getEvents };
+        return {
+            ...availableTools,
+            tipPoints,
+            purchaseVotes,
+            getQuests,
+            getPredictions,
+            getEvents,
+            getProducts,
+            getRounds,
+            getRaffles,
+        };
     },
     memory,
 });

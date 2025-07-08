@@ -25,6 +25,8 @@ import {
     events,
     eventActions,
     attendees,
+    raffleEntries,
+    raffles,
 } from "./schema/public";
 
 export const communityRelations = relations(communities, ({ many }) => ({
@@ -34,6 +36,7 @@ export const communityRelations = relations(communities, ({ many }) => ({
     admins: many(communityAdmins),
     predictions: many(predictions),
     connections: many(communityConnections),
+    raffles: many(raffles),
 }));
 
 export const communityAdminRelations = relations(communityAdmins, ({ one, many }) => ({
@@ -291,4 +294,28 @@ export const votesRelations = relations(votes, ({ one, many }) => ({
         references: [users.id],
     }),
     xp: many(xp),
+}));
+
+export const rafflesRelations = relations(raffles, ({ many, one }) => ({
+    entries: many(raffleEntries),
+    event: one(events, {
+        fields: [raffles.event],
+        references: [events.id],
+    }),
+    community: one(communities, {
+        fields: [raffles.community],
+        references: [communities.id],
+    }),
+}));
+
+export const raffleEntriesRelations = relations(raffleEntries, ({ one, many }) => ({
+    raffle: one(raffles, {
+        fields: [raffleEntries.raffle],
+        references: [raffles.id],
+    }),
+    user: one(users, {
+        fields: [raffleEntries.user],
+        references: [users.id],
+    }),
+    points: many(points),
 }));
