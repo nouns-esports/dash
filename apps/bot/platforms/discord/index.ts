@@ -17,10 +17,10 @@ import { Select } from "./components/select";
 import type { Embed } from "./components/embed";
 import { QuestEmbed } from "./embeds/quest";
 import { PredictionEmbed } from "./embeds/prediction";
-import { getQuests } from "~/packages/server/tools/getQuests";
-import { getPredictions } from "~/packages/server/tools/getPredictions";
+import { getQuests } from "~/packages/server/platforms/dash/tools/getQuests";
+import { getPredictions } from "~/packages/server/platforms/dash/tools/getPredictions";
 import { Input, Modal } from "./components/modal";
-import { getEvents } from "~/packages/server/tools/getEvents";
+import { getEvents } from "~/packages/server/platforms/dash/tools/getEvents";
 import { EventEmbed } from "./embeds/event";
 import { createTool } from "@mastra/core";
 import { db } from "~/packages/db";
@@ -28,9 +28,9 @@ import { passes, points, xp } from "~/packages/db/schema/public";
 import { sql } from "drizzle-orm";
 import { getPrediction } from "~/packages/server/queries/getPrediction";
 import { channelSnapshot } from "./tools/channelSnapshot";
-import { getRaffles } from "~/packages/server/tools/getRaffles";
-import { getRounds } from "~/packages/server/tools/getRounds";
-import { getProducts } from "~/packages/server/tools/getProducts";
+import { getRaffles } from "~/packages/server/platforms/dash/tools/getRaffles";
+import { getRounds } from "~/packages/server/platforms/dash/tools/getRounds";
+import { getProducts } from "~/packages/server/platforms/dash/tools/getProducts";
 import { RaffleEmbed } from "./embeds/raffle";
 import { RoundEmbed } from "./embeds/round";
 import { ProductEmbed } from "./embeds/product";
@@ -147,15 +147,15 @@ client.on("ready", () => {
 client.on("interactionCreate", async (interaction) => {
     const type = interaction.id.split(":")[0];
 
-    if (!interaction.guild) {
-        if ("reply" in interaction) {
-            return interaction.reply({
-                ephemeral: true,
-                content: "Sorry, I can only interact in servers right now.",
-            });
-        }
-
+    if (!("reply" in interaction)) {
         return;
+    }
+
+    if (!interaction.guild) {
+        return interaction.reply({
+            ephemeral: true,
+            content: "Sorry, I can only interact in servers right now.",
+        });
     }
 
     const community = await getCommunityFromServer({
@@ -163,15 +163,11 @@ client.on("interactionCreate", async (interaction) => {
     });
 
     if (!community) {
-        if ("reply" in interaction) {
-            return interaction.reply({
-                ephemeral: true,
-                content:
-                    "Community not found, please reach out to the server owner to finish setting up Dash.",
-            });
-        }
-
-        return;
+        return interaction.reply({
+            ephemeral: true,
+            content:
+                "Community not found, please reach out to the server owner to finish setting up Dash.",
+        });
     }
 
     let user = await getUser({
@@ -193,7 +189,7 @@ client.on("interactionCreate", async (interaction) => {
         const id = interaction.id.split(":")[1];
         const action = interaction.id.split(":")[2];
 
-        if (interaction.isButton() && action === "check") {
+        if (action === "check") {
             const result = await checkQuest({
                 user: user.id,
                 quest: id,
@@ -201,8 +197,8 @@ client.on("interactionCreate", async (interaction) => {
 
             await interaction.reply({
                 content: {
-                    claimed: `Quest claimed! You've earned ${result.xp}xp!`,
-                    "already-completed": "Looks like you already completed this quest!",
+                    claimed: `Quest claimed, you've earned ${result.xp}xp!`,
+                    "already-completed": "Looks like you already completed this quest.",
                     "not-completed":
                         "Doesn't look like you've completed all the actions for this quest yet.",
                 }[result.state],
@@ -220,17 +216,33 @@ client.on("interactionCreate", async (interaction) => {
         });
 
         if (!prediction) {
-            if ("reply" in interaction) {
-                return interaction.reply({
-                    content: "Prediction not found",
-                    ephemeral: true,
-                });
-            }
-
-            return;
+            return interaction.reply({
+                content: "Something went wrong and I couldn't find the prediction.",
+                ephemeral: true,
+            });
         }
 
-        if (interaction.isStringSelectMenu() && action === `prediction:${prediction.id}:predict`) {
+        if (action === "predict") {
+            await interaction.reply({
+                content: "Choose an outcome for your prediction",
+                ephemeral: true,
+                components: [
+                    Row([
+                        Select({
+                            customId: `prediction:${prediction.id}:select-outcome`,
+                            placeholder: "Select outcome",
+                            maxValues: 1,
+                            options: prediction.outcomes.map((outcome) => ({
+                                label: outcome.name,
+                                value: outcome.id,
+                            })),
+                        }),
+                    ]).toJSON(),
+                ],
+            });
+        }
+
+        if (action === `prediction:${prediction.id}:predict` && interaction.isStringSelectMenu()) {
             const selectedOutcome = interaction.values[0];
 
             const outcome = prediction.outcomes.find((outcome) => outcome.id === selectedOutcome);

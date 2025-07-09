@@ -1,7 +1,7 @@
 import { db } from "~/packages/db";
 import { accounts } from "~/packages/db/schema/public";
 import { and, eq, inArray } from "drizzle-orm";
-import type { Platforms } from "~/packages/platforms";
+import type { Platforms } from "~/packages/server/platforms";
 
 export async function createAccounts(input: {
     identifiers: string[];

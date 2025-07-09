@@ -1,5 +1,5 @@
 import { Embed } from "../components/embed";
-import { getRounds } from "~/packages/server/tools/getRounds";
+import { getRounds } from "~/packages/server/platforms/dash/tools/getRounds";
 import { z } from "zod";
 import { Button } from "../components/button";
 import { Row } from "../components/row";

@@ -12,18 +12,8 @@ import {
 } from "~/packages/db/schema/public";
 import { PostgresStore } from "@mastra/pg";
 import { env } from "~/env";
-import { platforms, type Platforms } from "~/packages/platforms";
-
-// Internal Tools
-import { tipPoints } from "~/packages/server/tools/tipPoints";
+import { getTools, platforms, type Platforms } from "~/packages/server/platforms";
 import { getLevel } from "~/packages/server/utils/getLevel";
-import { getQuests } from "~/packages/server/tools/getQuests";
-import { getPredictions } from "~/packages/server/tools/getPredictions";
-import { getEvents } from "~/packages/server/tools/getEvents";
-import { getProducts } from "~/packages/server/tools/getProducts";
-import { getRounds } from "~/packages/server/tools/getRounds";
-import { getRaffles } from "~/packages/server/tools/getRaffles";
-import { purchaseVotes } from "~/packages/server/tools/purchaseVotes";
 
 // When update this type, remember to migrate any existing thread metadata on mastra.mastra_threads.metadata
 export type DashRuntimeContext = {
@@ -51,18 +41,6 @@ export type DashRuntimeContext = {
         }
     >;
 };
-
-export const memory = new Memory({
-    storage: new PostgresStore({
-        connectionString: env.PRIMARY_DATABASE_URL,
-        schemaName: "mastra",
-    }),
-    options: {
-        threads: {
-            generateTitle: false,
-        },
-    },
-});
 
 export const dash = new Agent({
     name: "Dash",
@@ -127,17 +105,22 @@ export const dash = new Agent({
             }
         }
 
+        const defaultTools = getTools({ platform: "dash" });
+
         return {
             ...availableTools,
-            tipPoints,
-            purchaseVotes,
-            getQuests,
-            getPredictions,
-            getEvents,
-            getProducts,
-            getRounds,
-            getRaffles,
+            ...defaultTools,
         };
     },
-    memory,
+    memory: new Memory({
+        storage: new PostgresStore({
+            connectionString: env.PRIMARY_DATABASE_URL,
+            schemaName: "mastra",
+        }),
+        options: {
+            threads: {
+                generateTitle: false,
+            },
+        },
+    }),
 });

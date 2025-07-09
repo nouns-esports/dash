@@ -1,0 +1,48 @@
+import { createPlatform } from "../createPlatform";
+import { z } from "zod";
+
+// Tools
+import { getEvents } from "./tools/getEvents";
+import { getProducts } from "./tools/getProducts";
+import { getRounds } from "./tools/getRounds";
+import { getRaffles } from "./tools/getRaffles";
+import { purchaseVotes } from "./tools/purchaseVotes";
+import { getQuests } from "./tools/getQuests";
+import { getPredictions } from "./tools/getPredictions";
+
+// Actions
+import { registerEvent } from "./actions/events/registerEvent";
+import { visitLink } from "./actions/online/visitLink";
+import { makePrediction } from "./actions/predictions/makePrediction";
+import { castVote } from "./actions/rounds/castVote";
+import { createProposal } from "./actions/rounds/createProposal";
+import { linkDiscord } from "./actions/user/linkDiscord";
+import { linkTwitter } from "./actions/user/linkTwitter";
+import { linkFarcaster } from "./actions/user/linkFarcaster";
+import { reachPercentile } from "./actions/xp/reachPercentile";
+
+export const dash = createPlatform({
+    name: "Dash",
+    image: "",
+    config: z.object({}),
+    actions: {
+        registerEvent,
+        visitLink,
+        makePrediction,
+        castVote,
+        createProposal,
+        linkDiscord,
+        linkFarcaster,
+        linkTwitter,
+        reachPercentile,
+    },
+    tools: {
+        getEvents,
+        getProducts,
+        getRounds,
+        getRaffles,
+        purchaseVotes,
+        getQuests,
+        getPredictions,
+    },
+});

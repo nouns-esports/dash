@@ -1,6 +1,6 @@
 import { sql } from "drizzle-orm";
 import { check, index, pgTable, text, unique } from "drizzle-orm/pg-core";
-import type { Platforms } from "../../platforms";
+import type { Platforms } from "~/packages/server/platforms";
 
 const platforms = () => text().$type<Platforms>();
 

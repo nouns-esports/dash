@@ -1,7 +1,7 @@
 import { db } from "~/packages/db";
 import { passes, questCompletions, quests, users, xp } from "~/packages/db/schema/public";
 import { eq, sql } from "drizzle-orm";
-import { getAction } from "../actions";
+import { getAction } from "~/packages/server/platforms";
 
 export async function checkQuest(input: { user: string; quest: string }) {
     const user = await db.primary.query.users.findFirst({
@@ -65,7 +65,7 @@ export async function checkQuest(input: { user: string; quest: string }) {
         quest.actions.map(async (actionState) => {
             const action = getAction({
                 action: actionState.action,
-                platform: actionState.platform,
+                platform: actionState.platform ?? "dash",
             });
 
             if (!action) {

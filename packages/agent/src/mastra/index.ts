@@ -1,7 +1,7 @@
 import { Mastra } from "@mastra/core";
 import { dash, type DashRuntimeContext } from "./agents";
 import { env } from "../../../../env";
-import { platforms } from "../../../platforms";
+import { platforms } from "~/packages/server/platforms";
 import type { RuntimeContext } from "@mastra/core/runtime-context";
 import { PinoLogger } from "@mastra/loggers";
 

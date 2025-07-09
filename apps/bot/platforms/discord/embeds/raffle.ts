@@ -1,6 +1,5 @@
-import { env } from "~/env";
 import { Embed } from "../components/embed";
-import { getRaffles } from "~/packages/server/tools/getRaffles";
+import { getRaffles } from "~/packages/server/platforms/dash/tools/getRaffles";
 import { z } from "zod";
 import { Row } from "../components/row";
 import { Button } from "../components/button";

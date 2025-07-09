@@ -2,7 +2,7 @@ import { db } from "~/packages/db";
 import { pinataClient } from "../clients/pinata";
 import { communities, communityAdmins, communityConnections } from "~/packages/db/schema/public";
 import { eq } from "drizzle-orm";
-import type { platforms, Platforms } from "~/packages/platforms";
+import { platforms, type Platforms } from "~/packages/server/platforms";
 
 export type Community = typeof communities.$inferSelect & {
     admins: (typeof communityAdmins.$inferSelect)[];

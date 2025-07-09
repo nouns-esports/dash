@@ -1,6 +1,6 @@
 import { Embed } from "../components/embed";
 import { z } from "zod";
-import { getEvents } from "~/packages/server/tools/getEvents";
+import { getEvents } from "~/packages/server/platforms/dash/tools/getEvents";
 import { Row } from "../components/row";
 import { Button } from "../components/button";
 

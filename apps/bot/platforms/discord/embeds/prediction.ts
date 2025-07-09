@@ -1,6 +1,6 @@
 import { Embed } from "../components/embed";
 import { z } from "zod";
-import { getPredictions } from "~/packages/server/tools/getPredictions";
+import { getPredictions } from "~/packages/server/platforms/dash/tools/getPredictions";
 import { Row } from "../components/row";
 import { Button } from "../components/button";
 
