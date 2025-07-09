@@ -445,7 +445,7 @@ client.on("messageCreate", async (message) => {
                 }),
             memory: {
                 thread: {
-                    id: `discord:${user.id}`,
+                    id: `discord:${community.id}:${user.id}`,
                     resourceId: user.id,
                     metadata: {
                         platform: "discord",
