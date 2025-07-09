@@ -449,9 +449,7 @@ client.on("messageCreate", async (message) => {
                     resourceId: user.id,
                     metadata: {
                         platform: "discord",
-                        room,
                         community: community.id,
-                        mentions: mentionedAccounts.map((mention) => mention.id),
                     },
                 },
                 resource: user.id,
