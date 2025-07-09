@@ -8,8 +8,9 @@ import { createAccounts } from "~/packages/server/mutations/createAccounts";
 
 export function channelSnapshot(message: Message) {
     return createTool({
-        id: "discord:channelSnapshot",
-        description: "Take a snapshot of members in the channel and distribute xp and/or points",
+        id: "channelSnapshot",
+        description:
+            "Take a snapshot of members in the Discord voice channel and distribute xp and/or points",
         inputSchema: z.object({
             reason: z.string().optional().describe("The reason for the snapshot"),
             xp: z.number().describe("The amount of xp to distribute"),

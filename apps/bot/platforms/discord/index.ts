@@ -362,15 +362,34 @@ client.on("messageCreate", async (message) => {
         runtimeContext.set("user", user);
         runtimeContext.set("mentions", mentionedAccounts);
 
+        const previousReply = message.reference?.messageId
+            ? await message.channel.messages.fetch(message.reference.messageId)
+            : null;
+
+        const fromAuthor = previousReply?.author.id === message.author.id;
+        const fromAssistant = previousReply?.author.id === client.user?.id;
+
         const response = await agent.generate({
-            messages: [
-                {
-                    role: "user",
-                    content: message.content,
-                },
-            ],
+            messages:
+                previousReply && (fromAuthor || fromAssistant)
+                    ? [
+                          {
+                              role: fromAssistant ? "assistant" : "user",
+                              content: previousReply.content,
+                          },
+                          {
+                              role: "user",
+                              content: message.content,
+                          },
+                      ]
+                    : [
+                          {
+                              role: "user",
+                              content: message.content,
+                          },
+                      ],
             clientTools: {
-                channelSnapshot: channelSnapshot(message),
+                "discord:channelSnapshot": channelSnapshot(message),
             },
             runtimeContext,
             experimental_output: z
@@ -426,14 +445,13 @@ client.on("messageCreate", async (message) => {
                 }),
             memory: {
                 thread: {
-                    id: randomUUID(),
+                    id: `discord:${user.id}`,
                     resourceId: user.id,
                     metadata: {
                         platform: "discord",
                         room,
-                        community,
-                        user,
-                        mentions: mentionedAccounts,
+                        community: community.id,
+                        mentions: mentionedAccounts.map((mention) => mention.id),
                     },
                 },
                 resource: user.id,

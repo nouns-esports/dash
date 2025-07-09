@@ -118,6 +118,7 @@ export const dash = new Agent({
             schemaName: "mastra",
         }),
         options: {
+            lastMessages: 10,
             threads: {
                 generateTitle: false,
             },
