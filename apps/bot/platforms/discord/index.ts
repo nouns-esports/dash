@@ -389,7 +389,7 @@ client.on("messageCreate", async (message) => {
                           },
                       ],
             clientTools: {
-                "discord:channelSnapshot": channelSnapshot(message),
+                discord_channelSnapshot: channelSnapshot(message),
             },
             runtimeContext,
             experimental_output: z
