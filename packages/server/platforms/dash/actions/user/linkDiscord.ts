@@ -11,7 +11,7 @@ export const linkDiscord = createAction({
             if (account.platform === "discord") {
                 if (input.minAge !== undefined) {
                     const creationDate = new Date(
-                        Number((BigInt(account.identifier) >> 22n) + 1420070400000n),
+                        Number((BigInt(account.identifier) >> BigInt(22)) + BigInt(1420070400000)),
                     );
 
                     const now = new Date();
