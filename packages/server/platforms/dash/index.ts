@@ -9,6 +9,7 @@ import { getRaffles } from "./tools/getRaffles";
 import { purchaseVotes } from "./tools/purchaseVotes";
 import { getQuests } from "./tools/getQuests";
 import { getPredictions } from "./tools/getPredictions";
+import { tipPoints } from "./tools/tipPoints";
 
 // Actions
 import { registerEvent } from "./actions/events/registerEvent";
@@ -44,5 +45,6 @@ export const dash = createPlatform({
         purchaseVotes,
         getQuests,
         getPredictions,
+        tipPoints,
     },
 });
