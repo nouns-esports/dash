@@ -7,11 +7,12 @@ import type { DashRuntimeContext } from "~/packages/agent/src/mastra/agents";
 
 export const tipPoints = createTool({
     id: "tipPoints",
-    description: "Send or tip points to another user in the same community",
+    description:
+        "Send, tip, or issue (if the user is an owner of the community) points to another user in the same community",
     inputSchema: z.object({
-        amount: z.number().describe("The number of points to tip"),
+        amount: z.number().describe("The number of points to tip or issue"),
     }),
-    outputSchema: z.boolean().describe("Whether the points were tipped successfully"),
+    outputSchema: z.boolean().describe("Whether the points were sent successfully"),
     execute: async ({ context, runtimeContext }) => {
         await db.primary.transaction(async (tx) => {
             const user = runtimeContext.get("user") as DashRuntimeContext["user"];
@@ -30,22 +31,38 @@ export const tipPoints = createTool({
 
             const pass = user.passes.find((pass) => pass.community.id === community.id);
 
-            if (!pass || pass.points < context.amount) {
-                throw new Error("You do not have enough points to tip");
+            if (!pass) {
+                throw new Error("You do not have any points to tip");
             }
 
-            await tx
-                .insert(passes)
-                .values({
-                    user: user.id,
-                    community: community.id,
-                })
-                .onConflictDoUpdate({
-                    target: [passes.user, passes.community],
-                    set: {
-                        points: sql`${passes.points} - ${context.amount}`,
-                    },
-                });
+            let issuePoints = false;
+
+            if (pass.points < context.amount) {
+                const isOwner = community.admins.some(
+                    (admin) => admin.user === user.id && admin.owner,
+                );
+
+                if (!isOwner) {
+                    throw new Error("You do not have enough points to tip");
+                }
+
+                issuePoints = true;
+            }
+
+            if (!issuePoints) {
+                await tx
+                    .insert(passes)
+                    .values({
+                        user: user.id,
+                        community: community.id,
+                    })
+                    .onConflictDoUpdate({
+                        target: [passes.user, passes.community],
+                        set: {
+                            points: sql`${passes.points} - ${context.amount}`,
+                        },
+                    });
+            }
 
             if (mention.user) {
                 await tx
@@ -64,7 +81,7 @@ export const tipPoints = createTool({
 
                 await tx.insert(points).values({
                     community: community.id,
-                    from: user.id,
+                    from: issuePoints ? null : user.id,
                     to: mention.user.id,
                     amount: context.amount,
                 });

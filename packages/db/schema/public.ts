@@ -222,8 +222,15 @@ export const quests = pgTable(
         deprecated_start: t.timestamp("start"),
         deprecated_end: t.timestamp("end"),
         deprecated_featured: t.boolean("featured").notNull().default(false),
+        embedding: t.vector({ dimensions: 1536 }),
     }),
-    (t) => [unique("quests_handle_and_community_unique").on(t.handle, t.community)],
+    (t) => [
+        unique("quests_handle_and_community_unique").on(t.handle, t.community),
+        index("quests_cosine_index").using(
+			"hnsw",
+			t.embedding.op("vector_cosine_ops"),
+		),
+    ],
 );
 
 export const questActions = pgTable("quest_actions", (t) => ({

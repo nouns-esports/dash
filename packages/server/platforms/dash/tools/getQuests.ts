@@ -4,6 +4,8 @@ import { questCompletions, quests } from "~/packages/db/schema/public";
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 import type { DashRuntimeContext } from "~/packages/agent/src/mastra/agents";
+import { embed } from "ai";
+import { openai } from "@ai-sdk/openai";
 
 export const getQuests = createTool({
     id: "getQuests",
@@ -19,6 +21,7 @@ export const getQuests = createTool({
             .optional()
             .describe("The optional minimum amount of points to get quests for"),
         limit: z.number().max(3).optional().describe("The number of quests to get with a max of 3"),
+        search: z.string().optional().describe("A search term or phrase to filter quests by"),
     }),
     outputSchema: z.array(
         z.object({
@@ -39,6 +42,17 @@ export const getQuests = createTool({
             throw new Error("Community is required to get quests");
         }
 
+        let searchEmbedding: number[] | undefined;
+
+        if (context.search) {
+            const { embedding } = await embed({
+                model: openai.embedding("text-embedding-3-small"),
+                value: context.search,
+            });
+
+            searchEmbedding = embedding;
+        }
+
         const fetchedQuests = await db.pgpool.query.quests.findMany({
             where: and(
                 eq(quests.community, community.id),
@@ -48,7 +62,7 @@ export const getQuests = createTool({
                     ? sql`NOT EXISTS (SELECT 1 FROM quest_completions WHERE quest_completions.quest = quests.id AND quest_completions.user = ${user.id})`
                     : undefined,
             ),
-            orderBy: desc(quests.createdAt),
+            orderBy: searchEmbedding ? [sql`${quests.embedding} <=> ${searchEmbedding}`, desc(quests.createdAt)] : desc(quests.createdAt),
             with: {
                 community: true,
                 completions: {
