@@ -67,8 +67,10 @@ export const dash = new Agent({
           `
           }
 
-          Do not say things unless you know them to be true / have the capability to act on the request given the tools and information you have been provided.
- 
+          GENERATION CONTEXT:
+          Do not say things or execute tools unless you know them to be true / have the capability to act on the request given the tools and information you have been provided.
+          When executing tools, any data that may be dynamic (such as points or xp) should never be pulled from any historical message context you might have been provided (such as a previous message by you or the user). You should rely on data from this system propmt primarily for tool execution.
+
           COMMUNITY CONTEXT:
           ${platform ? `You are responding to a message on the ${platform} platform.` : ""}
           ${community ? `The relevant community is ${community.name}.` : ""}
@@ -76,7 +78,8 @@ export const dash = new Agent({
 
           USER CONTEXT:
           ${user ? `The user you are talking to is ${user.name}.` : ""}
-          ${pass ? `The user has ${pass.points} ${pass.community.points?.name ?? "points"} and ${pass.xp} xp (level ${getLevel({ xp: pass.xp, config: pass.community.levels }).currentLevel})` : ""}
+          ${pass ? `The user has ${pass.points} ${pass.community.points?.name ?? "points"}` : ""}
+          ${pass ? `The user is level ${getLevel({ xp: pass.xp, config: pass.community.levels }).currentLevel} with ${pass.xp}xp` : ""}
         
           MESSAGE CONTEXT:
           ${mentions.length > 0 && platform ? `The user mentioned the following ${platform} accounts ${mentions.map((mention) => mention.id).join(", ")} in the message.` : ""}
