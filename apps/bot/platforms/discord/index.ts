@@ -36,6 +36,7 @@ import { RoundEmbed } from "./embeds/round";
 import { ProductEmbed } from "./embeds/product";
 import type { Community } from "~/packages/server/mutations/createCommunity";
 import { checkQuest } from "~/packages/server/mutations/checkQuest";
+import { logConsole } from "./tools/logConsole";
 
 // import { createCommunity } from "~/packages/server/mutations/createCommunity";
 // import { getCommunity } from "~/packages/server/queries/getCommunity";
@@ -392,6 +393,7 @@ client.on("messageCreate", async (message) => {
                       ],
             clientTools: {
                 discord_channelSnapshot: channelSnapshot(message),
+                logConsole: logConsole,
             },
             runtimeContext,
             experimental_output: z
