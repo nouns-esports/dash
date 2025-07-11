@@ -1,4 +1,4 @@
-import { ActionRowBuilder, Client, StringSelectMenuBuilder, type Interaction } from "discord.js";
+import { ActionRowBuilder, Client, MessageFlags, StringSelectMenuBuilder, type Interaction } from "discord.js";
 import { env } from "~/env";
 import { mastraClient } from "~/packages/server/clients/mastra";
 import z from "zod";
@@ -152,7 +152,7 @@ client.on("interactionCreate", async (interaction) => {
         return;
     }
 
-    await interaction.deferReply({ephemeral: true});
+    await interaction.deferReply({flags: [MessageFlags.Ephemeral]});
 
 
     if (!interaction.guild) {
@@ -197,7 +197,7 @@ client.on("interactionCreate", async (interaction) => {
                 quest: id,
             });
 
-            await interaction.editReply({
+            return interaction.editReply({
                 content: {
                     claimed: `Quest claimed, you've earned ${result.xp}xp!`,
                     "already-completed": "Looks like you already completed this quest.",
@@ -224,7 +224,7 @@ client.on("interactionCreate", async (interaction) => {
         }
 
         if (action === "predict") {
-            await interaction.editReply({
+            return interaction.editReply({
                 content: "Choose an outcome for your prediction",
                 components: [
                     Row([
@@ -253,13 +253,13 @@ client.on("interactionCreate", async (interaction) => {
                 });
             }
 
-            await interaction.editReply({
+            return interaction.editReply({
                 content: `Successfully placed your prediction for ${outcome.name}`,
             });
         }
 
         if (interaction.isButton() && action === "predict") {
-            await interaction.editReply({
+            return interaction.editReply({
                 content: "Choose an outcome for your prediction",
                 components: [
                     Row([
@@ -276,6 +276,10 @@ client.on("interactionCreate", async (interaction) => {
                 ],
             });
         }
+
+        interaction.editReply({
+            content: "Sorry something went wrong, please try again.",
+        });
     }
 });
 
