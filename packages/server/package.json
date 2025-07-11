@@ -2,7 +2,7 @@
     "name": "clients",
     "private": true,
     "dependencies": {
-        "@mastra/client-js": "0.10.9",
+        "@mastra/client-js": "0.10.11",
         "@privy-io/server-auth": "^1.22.2",
         "pinata-web3": "^0.5.4",
         "@neynar/nodejs-sdk": "^1.68.0"
