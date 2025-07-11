@@ -147,13 +147,16 @@ client.on("ready", () => {
 client.on("interactionCreate", async (interaction) => {
     const type = interaction.id.split(":")[0];
 
+
     if (!("reply" in interaction)) {
         return;
     }
 
+    await interaction.deferReply({ephemeral: true});
+
+
     if (!interaction.guild) {
-        return interaction.reply({
-            ephemeral: true,
+        return interaction.editReply({
             content: "Sorry, I can only interact in servers right now.",
         });
     }
@@ -163,8 +166,7 @@ client.on("interactionCreate", async (interaction) => {
     });
 
     if (!community) {
-        return interaction.reply({
-            ephemeral: true,
+        return interaction.editReply({
             content:
                 "Community not found, please reach out to the server owner to finish setting up Dash.",
         });
@@ -195,7 +197,7 @@ client.on("interactionCreate", async (interaction) => {
                 quest: id,
             });
 
-            await interaction.reply({
+            await interaction.editReply({
                 content: {
                     claimed: `Quest claimed, you've earned ${result.xp}xp!`,
                     "already-completed": "Looks like you already completed this quest.",
@@ -216,16 +218,14 @@ client.on("interactionCreate", async (interaction) => {
         });
 
         if (!prediction) {
-            return interaction.reply({
+            return interaction.editReply({
                 content: "Something went wrong and I couldn't find the prediction.",
-                ephemeral: true,
             });
         }
 
         if (action === "predict") {
-            await interaction.reply({
+            await interaction.editReply({
                 content: "Choose an outcome for your prediction",
-                ephemeral: true,
                 components: [
                     Row([
                         Select({
@@ -248,21 +248,19 @@ client.on("interactionCreate", async (interaction) => {
             const outcome = prediction.outcomes.find((outcome) => outcome.id === selectedOutcome);
 
             if (!outcome) {
-                return interaction.reply({
+                return interaction.editReply({
                     content: "Outcome not found",
-                    ephemeral: true,
                 });
             }
 
-            await interaction.reply({
+            await interaction.editReply({
                 content: `Successfully placed your prediction for ${outcome.name}`,
             });
         }
 
         if (interaction.isButton() && action === "predict") {
-            await interaction.reply({
+            await interaction.editReply({
                 content: "Choose an outcome for your prediction",
-                ephemeral: true,
                 components: [
                     Row([
                         Select({
