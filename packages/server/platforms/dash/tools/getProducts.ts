@@ -27,7 +27,7 @@ export const getProducts = createTool({
             name: z.string().describe("The name of the product"),
             image: z.string().describe("The image of the product"),
             price: z.number().describe("The starting at price of the product"),
-            inventory: z.number().describe("The remaining stock of the product"),
+            inventory: z.number().nullable().describe("The remaining stock of the product"),
         }),
     ),
     execute: async ({ context, runtimeContext }) => {
@@ -69,10 +69,16 @@ export const getProducts = createTool({
         return fetchedProducts.map((product) => {
             const price = Math.min(...product.variants.map((variant) => variant.price));
 
-            const inventory = product.variants.reduce(
-                (acc, variant) => acc + (variant.inventory ?? Infinity),
-                0,
-            );
+            let inventory: number | null = 0;
+
+            for (const variant of product.variants) {
+                if (variant.inventory === null) {
+                    inventory = null;
+                    break;
+                }
+
+                inventory += variant.inventory;
+            }
 
             const { images } = parseProduct({
                 product,
