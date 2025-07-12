@@ -13,7 +13,7 @@ export function ProductEmbed(props: { product: z.infer<typeof getProducts.output
             color: "#4A5EEB",
             footer: {
                 text:
-                    props.product.inventory === null
+                    props.product.inventory === null || props.product.inventory > 100
                         ? "In stock"
                         : props.product.inventory > 0
                           ? `${props.product.inventory} in stock`
