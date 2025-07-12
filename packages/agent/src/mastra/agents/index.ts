@@ -21,6 +21,7 @@ export type DashRuntimeContext = {
     community?: typeof communities.$inferSelect & {
         connections: (typeof communityConnections.$inferSelect)[];
         admins: (typeof communityAdmins.$inferSelect)[];
+        // embedding: never;
     };
     room: string;
     user: typeof users.$inferSelect & {
@@ -121,7 +122,7 @@ export const dash = new Agent({
             schemaName: "mastra",
         }),
         options: {
-            lastMessages: 10,
+            lastMessages: 3,
             threads: {
                 generateTitle: false,
             },

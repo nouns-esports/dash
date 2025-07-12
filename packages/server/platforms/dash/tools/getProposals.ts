@@ -3,7 +3,7 @@ import { z } from "zod";
 import type { DashRuntimeContext } from "~/packages/agent/src/mastra/agents";
 import { db } from "~/packages/db";
 import { proposals, rounds, votes } from "~/packages/db/schema/public";
-import { cosineDistance, eq } from "drizzle-orm";
+import { cosineDistance, eq, lt } from "drizzle-orm";
 import { embed } from "ai";
 import { openai } from "@ai-sdk/openai";
 
@@ -33,7 +33,6 @@ export const getProposals = createTool({
                 id: z.string().describe("The id of the round"),
                 name: z.string().describe("The name of the round"),
                 image: z.string().describe("The image of the round"),
-                description: z.string().describe("The description of the round"),
                 start: z.date().describe("The start date of the round"),
                 votingStart: z.date().describe("The voting start date of the round"),
                 end: z.date().describe("The end date of the round"),
@@ -75,6 +74,9 @@ export const getProposals = createTool({
                 : undefined,
             with: {
                 proposals: {
+                    where: proposalSearchEmbedding
+                        ? lt(cosineDistance(proposals.embedding, proposalSearchEmbedding), 0.5)
+                        : undefined,
                     limit: context.limit ?? 3,
                     orderBy: proposalSearchEmbedding
                         ? cosineDistance(proposals.embedding, proposalSearchEmbedding)
@@ -103,7 +105,6 @@ export const getProposals = createTool({
                 id: fetchedRound.id,
                 name: fetchedRound.name,
                 image: fetchedRound.image,
-                description: fetchedRound.description,
                 start: fetchedRound.start,
                 votingStart: fetchedRound.votingStart,
                 end: fetchedRound.end,

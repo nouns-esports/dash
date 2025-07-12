@@ -1,5 +1,5 @@
 import { db } from "~/packages/db";
-import { and, desc, eq, gte, sql, cosineDistance } from "drizzle-orm";
+import { and, desc, eq, gte, sql, cosineDistance, lt } from "drizzle-orm";
 import { questCompletions, quests } from "~/packages/db/schema/public";
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
@@ -61,12 +61,12 @@ export const getQuests = createTool({
                 context.completed
                     ? sql`NOT EXISTS (SELECT 1 FROM quest_completions WHERE quest_completions.quest = quests.id AND quest_completions.user = ${user.id})`
                     : undefined,
+                searchEmbedding
+                    ? lt(cosineDistance(quests.embedding, searchEmbedding), 0.5)
+                    : undefined,
             ),
             orderBy: searchEmbedding
-                ? [
-                      cosineDistance(quests.embedding, searchEmbedding),
-                      desc(quests.createdAt),
-                  ]
+                ? [cosineDistance(quests.embedding, searchEmbedding), desc(quests.createdAt)]
                 : desc(quests.createdAt),
             with: {
                 community: true,

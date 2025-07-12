@@ -3,7 +3,7 @@ import { z } from "zod";
 import type { DashRuntimeContext } from "~/packages/agent/src/mastra/agents";
 import { db } from "~/packages/db";
 import { products } from "~/packages/db/schema/public";
-import { and, cosineDistance, eq } from "drizzle-orm";
+import { and, cosineDistance, eq, lt } from "drizzle-orm";
 import { parseProduct } from "~/packages/server/utils/parseProduct";
 import { embed } from "ai";
 import { openai } from "@ai-sdk/openai";
@@ -53,6 +53,9 @@ export const getProducts = createTool({
             where: and(
                 eq(products.community, community.id),
                 context.event ? eq(products.event, context.event) : undefined,
+                searchEmbedding
+                    ? lt(cosineDistance(products.embedding, searchEmbedding), 0.5)
+                    : undefined,
             ),
             orderBy: searchEmbedding
                 ? cosineDistance(products.embedding, searchEmbedding)

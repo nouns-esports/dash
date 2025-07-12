@@ -3,7 +3,7 @@ import { z } from "zod";
 import type { DashRuntimeContext } from "~/packages/agent/src/mastra/agents";
 import { db } from "~/packages/db";
 import { bets, predictions } from "~/packages/db/schema/public";
-import { and, cosineDistance, desc, eq } from "drizzle-orm";
+import { and, cosineDistance, desc, eq, lt } from "drizzle-orm";
 import { env } from "~/env";
 import { embed } from "ai";
 import { openai } from "@ai-sdk/openai";
@@ -69,6 +69,9 @@ export const getPredictions = createTool({
             where: and(
                 eq(predictions.community, community.id),
                 context.event ? eq(predictions.event, context.event) : undefined,
+                searchEmbedding
+                    ? lt(cosineDistance(predictions.embedding, searchEmbedding), 0.5)
+                    : undefined,
             ),
             orderBy: searchEmbedding
                 ? [cosineDistance(predictions.embedding, searchEmbedding), desc(predictions.start)]

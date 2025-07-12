@@ -3,7 +3,7 @@ import { communities, communityConnections } from "~/packages/db/schema/public";
 import { sql } from "drizzle-orm";
 
 export async function getCommunityFromServer(input: { server: string }) {
-    const community = await db.pgpool.query.communities.findFirst({
+    return db.pgpool.query.communities.findFirst({
         where: sql`
             ${communities.id} = (
                 SELECT cp.community
@@ -21,6 +21,4 @@ export async function getCommunityFromServer(input: { server: string }) {
             connections: true,
         },
     });
-
-    return community;
 }

@@ -3,7 +3,7 @@ import { z } from "zod";
 import type { DashRuntimeContext } from "~/packages/agent/src/mastra/agents";
 import { db } from "~/packages/db";
 import { proposals, rounds, votes } from "~/packages/db/schema/public";
-import { cosineDistance, eq } from "drizzle-orm";
+import { and, cosineDistance, eq, lt } from "drizzle-orm";
 import { embed } from "ai";
 import { openai } from "@ai-sdk/openai";
 
@@ -47,7 +47,12 @@ export const getRounds = createTool({
         }
 
         const fetchedRounds = await db.pgpool.query.rounds.findMany({
-            where: eq(rounds.community, community.id),
+            where: and(
+                eq(rounds.community, community.id),
+                searchEmbedding
+                    ? lt(cosineDistance(rounds.embedding, searchEmbedding), 0.5)
+                    : undefined,
+            ),
             orderBy: searchEmbedding
                 ? cosineDistance(rounds.embedding, searchEmbedding)
                 : undefined,

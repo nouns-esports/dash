@@ -59,6 +59,7 @@ export const mastra = new Mastra({
                         admins: [],
                         levels: null,
                         points: null,
+                        embedding: null,
                     } satisfies DashRuntimeContext["community"]);
 
                     runtimeContext.set("platform", "discord");

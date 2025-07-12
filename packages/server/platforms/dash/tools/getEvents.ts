@@ -3,7 +3,7 @@ import { z } from "zod";
 import type { DashRuntimeContext } from "~/packages/agent/src/mastra/agents";
 import { db } from "~/packages/db";
 import { attendees, events } from "~/packages/db/schema/public";
-import { and, cosineDistance, desc, eq } from "drizzle-orm";
+import { and, cosineDistance, desc, eq, lt, sql } from "drizzle-orm";
 import { embed } from "ai";
 import { openai } from "@ai-sdk/openai";
 
@@ -45,7 +45,12 @@ export const getEvents = createTool({
         }
 
         const fetchedEvents = await db.pgpool.query.events.findMany({
-            where: and(eq(events.community, community.id)),
+            where: and(
+                eq(events.community, community.id),
+                searchEmbedding
+                    ? lt(cosineDistance(events.embedding, searchEmbedding), 0.5)
+                    : undefined,
+            ),
             orderBy: searchEmbedding
                 ? [cosineDistance(events.embedding, searchEmbedding), desc(events.start)]
                 : desc(events.start),
