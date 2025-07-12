@@ -54,7 +54,7 @@ export const getProducts = createTool({
                 eq(products.community, community.id),
                 context.event ? eq(products.event, context.event) : undefined,
                 searchEmbedding
-                    ? lt(cosineDistance(products.embedding, searchEmbedding), 0.5)
+                    ? lt(cosineDistance(products.embedding, searchEmbedding), 0.75)
                     : undefined,
                 eq(products.active, true),
             ),

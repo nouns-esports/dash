@@ -48,7 +48,7 @@ export const getEvents = createTool({
             where: and(
                 eq(events.community, community.id),
                 searchEmbedding
-                    ? lt(cosineDistance(events.embedding, searchEmbedding), 0.5)
+                    ? lt(cosineDistance(events.embedding, searchEmbedding), 0.75)
                     : undefined,
             ),
             orderBy: searchEmbedding

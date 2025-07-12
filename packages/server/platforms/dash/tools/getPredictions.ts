@@ -70,7 +70,7 @@ export const getPredictions = createTool({
                 eq(predictions.community, community.id),
                 context.event ? eq(predictions.event, context.event) : undefined,
                 searchEmbedding
-                    ? lt(cosineDistance(predictions.embedding, searchEmbedding), 0.5)
+                    ? lt(cosineDistance(predictions.embedding, searchEmbedding), 0.75)
                     : undefined,
             ),
             orderBy: searchEmbedding

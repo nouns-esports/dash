@@ -56,7 +56,7 @@ export const getRaffles = createTool({
             where: and(
                 eq(raffles.community, community.id),
                 searchEmbedding
-                    ? lt(cosineDistance(raffles.embedding, searchEmbedding), 0.5)
+                    ? lt(cosineDistance(raffles.embedding, searchEmbedding), 0.75)
                     : undefined,
             ),
             orderBy: searchEmbedding

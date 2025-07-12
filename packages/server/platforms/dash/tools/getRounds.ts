@@ -50,7 +50,7 @@ export const getRounds = createTool({
             where: and(
                 eq(rounds.community, community.id),
                 searchEmbedding
-                    ? lt(cosineDistance(rounds.embedding, searchEmbedding), 0.5)
+                    ? lt(cosineDistance(rounds.embedding, searchEmbedding), 0.75)
                     : undefined,
             ),
             orderBy: searchEmbedding
