@@ -27,6 +27,10 @@ import {
     attendees,
     raffleEntries,
     raffles,
+    products,
+    productVariants,
+    carts,
+    collections,
 } from "./schema/public";
 
 export const communityRelations = relations(communities, ({ many }) => ({
@@ -67,9 +71,9 @@ export const eventsRelations = relations(events, ({ one, many }) => ({
     rounds: many(rounds),
     attendees: many(attendees),
     predictions: many(predictions),
-    // products: many(products),
+    products: many(products),
     // checkpoints: many(checkpoints),
-    // raffles: many(raffles),
+    raffles: many(raffles),
     actions: many(eventActions),
 }));
 
@@ -318,4 +322,47 @@ export const raffleEntriesRelations = relations(raffleEntries, ({ one, many }) =
         references: [users.id],
     }),
     points: many(points),
+}));
+
+export const productsRelations = relations(products, ({ one, many }) => ({
+    collection: one(collections, {
+        fields: [products.collection],
+        references: [collections.id],
+    }),
+    event: one(events, {
+        fields: [products.event],
+        references: [events.id],
+    }),
+    community: one(communities, {
+        fields: [products.community],
+        references: [communities.id],
+    }),
+    variants: many(productVariants),
+}));
+
+export const productVariantsRelations = relations(productVariants, ({ one, many }) => ({
+    product: one(products, {
+        fields: [productVariants.product],
+        references: [products.id],
+    }),
+    carts: many(carts),
+}));
+
+export const collectionsRelations = relations(collections, ({ many }) => ({
+    products: many(products),
+}));
+
+export const cartsRelations = relations(carts, ({ one }) => ({
+    user: one(users, {
+        fields: [carts.user],
+        references: [users.id],
+    }),
+    product: one(products, {
+        fields: [carts.product],
+        references: [products.id],
+    }),
+    variant: one(productVariants, {
+        fields: [carts.variant],
+        references: [productVariants.id],
+    }),
 }));

@@ -3,7 +3,9 @@ import { z } from "zod";
 import type { DashRuntimeContext } from "~/packages/agent/src/mastra/agents";
 import { db } from "~/packages/db";
 import { attendees, events } from "~/packages/db/schema/public";
-import { and, desc, eq } from "drizzle-orm";
+import { and, cosineDistance, desc, eq } from "drizzle-orm";
+import { embed } from "ai";
+import { openai } from "@ai-sdk/openai";
 
 export const getEvents = createTool({
     id: "getEvents",
@@ -11,6 +13,7 @@ export const getEvents = createTool({
     inputSchema: z.object({
         community: z.string().describe("The id of the community"),
         limit: z.number().max(3).optional().describe("The number of events to get with a max of 3"),
+        search: z.string().optional().describe("A search term or phrase to filter events by"),
     }),
     outputSchema: z.array(
         z.object({
@@ -30,9 +33,22 @@ export const getEvents = createTool({
             throw new Error("Community is required to get quests");
         }
 
+        let searchEmbedding: number[] | undefined;
+
+        if (context.search) {
+            const { embedding } = await embed({
+                model: openai.embedding("text-embedding-3-small"),
+                value: context.search,
+            });
+
+            searchEmbedding = embedding;
+        }
+
         const fetchedEvents = await db.pgpool.query.events.findMany({
             where: and(eq(events.community, community.id)),
-            orderBy: desc(events.start),
+            orderBy: searchEmbedding
+                ? [cosineDistance(events.embedding, searchEmbedding), desc(events.start)]
+                : desc(events.start),
             limit: context.limit ?? 3,
             with: {
                 attendees: {

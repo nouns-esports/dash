@@ -1,9 +1,11 @@
 import { db } from "~/packages/db";
-import { and, desc, eq, gte, sql } from "drizzle-orm";
+import { and, cosineDistance, desc, eq, gte, sql } from "drizzle-orm";
 import { raffleEntries, raffles } from "~/packages/db/schema/public";
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 import type { DashRuntimeContext } from "~/packages/agent/src/mastra/agents";
+import { embed } from "ai";
+import { openai } from "@ai-sdk/openai";
 
 export const getRaffles = createTool({
     id: "getRaffles",
@@ -18,6 +20,7 @@ export const getRaffles = createTool({
             .max(3)
             .optional()
             .describe("The number of raffles to get with a max of 3"),
+        search: z.string().optional().describe("A search term or phrase to filter raffles by"),
     }),
     outputSchema: z.array(
         z.object({
@@ -38,9 +41,22 @@ export const getRaffles = createTool({
             throw new Error("Community is required to get quests");
         }
 
+        let searchEmbedding: number[] | undefined;
+
+        if (context.search) {
+            const { embedding } = await embed({
+                model: openai.embedding("text-embedding-3-small"),
+                value: context.search,
+            });
+
+            searchEmbedding = embedding;
+        }
+
         const fetchedRaffles = await db.pgpool.query.raffles.findMany({
             where: and(eq(raffles.community, community.id)),
-            orderBy: desc(raffles.start),
+            orderBy: searchEmbedding
+                ? [cosineDistance(raffles.embedding, searchEmbedding), desc(raffles.start)]
+                : desc(raffles.start),
             with: {
                 community: true,
                 entries: {

@@ -1,4 +1,10 @@
-import { ActionRowBuilder, Client, MessageFlags, StringSelectMenuBuilder, type Interaction } from "discord.js";
+import {
+    ActionRowBuilder,
+    Client,
+    MessageFlags,
+    StringSelectMenuBuilder,
+    type Interaction,
+} from "discord.js";
 import { env } from "~/env";
 import { mastraClient } from "~/packages/server/clients/mastra";
 import z from "zod";
@@ -37,6 +43,8 @@ import { ProductEmbed } from "./embeds/product";
 import type { Community } from "~/packages/server/mutations/createCommunity";
 import { checkQuest } from "~/packages/server/mutations/checkQuest";
 import { logConsole } from "./tools/logConsole";
+import { getProposals } from "~/packages/server/platforms/dash/tools/getProposals";
+import { ProposalEmbed } from "./embeds/proposal";
 
 // import { createCommunity } from "~/packages/server/mutations/createCommunity";
 // import { getCommunity } from "~/packages/server/queries/getCommunity";
@@ -148,13 +156,11 @@ client.on("ready", () => {
 client.on("interactionCreate", async (interaction) => {
     const type = interaction.id.split(":")[0];
 
-
     if (!("reply" in interaction)) {
         return;
     }
 
-    await interaction.deferReply({flags: [MessageFlags.Ephemeral]});
-
+    await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
 
     if (!interaction.guild) {
         return interaction.editReply({
@@ -438,6 +444,12 @@ client.on("messageCreate", async (message) => {
                                         "Products returned from the getProducts tool call",
                                     ),
                                 }),
+                                z.object({
+                                    type: z.literal("proposal"),
+                                    proposal: getProposals.outputSchema.element.describe(
+                                        "Proposals returned from the getProposals tool call",
+                                    ),
+                                }),
                             ]),
                         )
                         .max(3)
@@ -517,6 +529,15 @@ client.on("messageCreate", async (message) => {
                 messages.push({
                     components: product.components,
                     embeds: [product.embed],
+                });
+            }
+
+            if (embed.type === "proposal") {
+                const proposal = ProposalEmbed({ proposal: embed.proposal });
+
+                messages.push({
+                    components: proposal.components,
+                    embeds: [proposal.embed],
                 });
             }
         }

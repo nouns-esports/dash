@@ -3,8 +3,10 @@ import { z } from "zod";
 import type { DashRuntimeContext } from "~/packages/agent/src/mastra/agents";
 import { db } from "~/packages/db";
 import { bets, predictions } from "~/packages/db/schema/public";
-import { and, desc, eq } from "drizzle-orm";
+import { and, cosineDistance, desc, eq } from "drizzle-orm";
 import { env } from "~/env";
+import { embed } from "ai";
+import { openai } from "@ai-sdk/openai";
 
 export const getPredictions = createTool({
     id: "getPredictions",
@@ -17,6 +19,7 @@ export const getPredictions = createTool({
             .max(3)
             .optional()
             .describe("The number of predictions to get with a max of 3"),
+        search: z.string().optional().describe("A search term or phrase to filter predictions by"),
     }),
     outputSchema: z.array(
         z.object({
@@ -51,12 +54,25 @@ export const getPredictions = createTool({
             throw new Error("Community is required to get quests");
         }
 
+        let searchEmbedding: number[] | undefined;
+
+        if (context.search) {
+            const { embedding } = await embed({
+                model: openai.embedding("text-embedding-3-small"),
+                value: context.search,
+            });
+
+            searchEmbedding = embedding;
+        }
+
         const fetchedPredictions = await db.pgpool.query.predictions.findMany({
             where: and(
                 eq(predictions.community, community.id),
                 context.event ? eq(predictions.event, context.event) : undefined,
             ),
-            orderBy: desc(predictions.start),
+            orderBy: searchEmbedding
+                ? [cosineDistance(predictions.embedding, searchEmbedding), desc(predictions.start)]
+                : desc(predictions.start),
             with: {
                 outcomes: {
                     with: {

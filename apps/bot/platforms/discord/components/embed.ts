@@ -8,6 +8,7 @@ export function Embed(props: {
     color?: HexColorString;
     footer?: {
         text: string;
+        icon?: string;
     };
 }) {
     const embed = new EmbedBuilder();
@@ -17,7 +18,7 @@ export function Embed(props: {
     if (props.image) embed.setImage(props.image);
     if (props.url) embed.setURL(props.url);
     if (props.color) embed.setColor(props.color);
-    if (props.footer) embed.setFooter(props.footer);
+    if (props.footer) embed.setFooter({ text: props.footer.text, iconURL: props.footer.icon });
 
     return embed;
 }

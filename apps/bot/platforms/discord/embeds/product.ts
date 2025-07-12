@@ -11,6 +11,12 @@ export function ProductEmbed(props: { product: z.infer<typeof getProducts.output
             image: props.product.image,
             url: `https://nouns.gg/products/${props.product.id}`,
             color: "#4A5EEB",
+            footer: {
+                text:
+                    props.product.inventory > 0
+                        ? `${props.product.inventory} in stock`
+                        : "Out of stock",
+            },
         }),
         components: [
             Row([

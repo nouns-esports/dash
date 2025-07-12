@@ -12,42 +12,47 @@ export const meta = pgTable(
     (t) => [check("meta_only_one_record", sql`(SELECT COUNT(*) FROM "meta") <= 1`)],
 );
 
-export const communities = pgTable("communities", (t) => ({
-    id: t.uuid().primaryKey().defaultRandom(),
-    handle: t.text().notNull().unique(),
-    image: t.text().notNull(),
-    name: t.text().notNull(),
-    // Custom XP level configuration
-    levels: t.jsonb().$type<{
-        // Starting xp required to reach level 2
-        base: number;
-        // Maximum xp required to reach the next level
-        max: number;
-        // The midpoint of the curve
-        midpoint: number;
-        // The steepness of the curve
-        steepness: number;
-    }>(),
-    // The custom points branding, defaults to points
-    points: t.jsonb().$type<{
-        name: string;
-        image: string;
-        // The pool of dollars that can be redeemed proportionally from points
-        marketcap: number;
-    }>(),
-    // The custom agent identity, defaults to Dash
-    agent: t.jsonb().$type<{
-        name: string;
-        image: string;
-        // The custom system prompt to use for the agent
-        prompt: string;
-    }>(),
-    // DEPRECATED
-    deprecated_description: t.jsonb("description"),
-    deprecated_parentUrl: t.text("parent_url"),
-    deprecated_details: t.jsonb("details"),
-    deprecated_featured: t.boolean("featured").notNull().default(false),
-}));
+export const communities = pgTable(
+    "communities",
+    (t) => ({
+        id: t.uuid().primaryKey().defaultRandom(),
+        handle: t.text().notNull().unique(),
+        image: t.text().notNull(),
+        name: t.text().notNull(),
+        // Custom XP level configuration
+        levels: t.jsonb().$type<{
+            // Starting xp required to reach level 2
+            base: number;
+            // Maximum xp required to reach the next level
+            max: number;
+            // The midpoint of the curve
+            midpoint: number;
+            // The steepness of the curve
+            steepness: number;
+        }>(),
+        // The custom points branding, defaults to points
+        points: t.jsonb().$type<{
+            name: string;
+            image: string;
+            // The pool of dollars that can be redeemed proportionally from points
+            marketcap: number;
+        }>(),
+        // The custom agent identity, defaults to Dash
+        agent: t.jsonb().$type<{
+            name: string;
+            image: string;
+            // The custom system prompt to use for the agent
+            prompt: string;
+        }>(),
+        embedding: t.vector({ dimensions: 1536 }),
+        // DEPRECATED
+        deprecated_description: t.jsonb("description"),
+        deprecated_parentUrl: t.text("parent_url"),
+        deprecated_details: t.jsonb("details"),
+        deprecated_featured: t.boolean("featured").notNull().default(false),
+    }),
+    (t) => [index("communities_cosine_index").using("hnsw", t.embedding.op("vector_cosine_ops"))],
+);
 
 export const communityAdmins = pgTable(
     "community_admins",
@@ -226,10 +231,7 @@ export const quests = pgTable(
     }),
     (t) => [
         unique("quests_handle_and_community_unique").on(t.handle, t.community),
-        index("quests_cosine_index").using(
-			"hnsw",
-			t.embedding.op("vector_cosine_ops"),
-		),
+        index("quests_cosine_index").using("hnsw", t.embedding.op("vector_cosine_ops")),
     ],
 );
 
@@ -273,10 +275,14 @@ export const predictions = pgTable(
         start: t.timestamp(),
         end: t.timestamp(),
         pool: t.numeric({ precision: 38, scale: 18, mode: "number" }).notNull().default(0),
+        embedding: t.vector({ dimensions: 1536 }),
         // DEPRECATED
         deprecated_featured: t.boolean("featured").notNull().default(false),
     }),
-    (t) => [unique("predictions_handle_community_unique").on(t.handle, t.community)],
+    (t) => [
+        unique("predictions_handle_community_unique").on(t.handle, t.community),
+        index("predictions_cosine_index").using("hnsw", t.embedding.op("vector_cosine_ops")),
+    ],
 );
 
 export const outcomes = pgTable("outcomes", (t) => ({
@@ -315,6 +321,7 @@ export const events = pgTable(
         }>(),
         details: t.jsonb().$type<any>(),
         attendeeCount: t.integer("attendee_count"),
+        embedding: t.vector({ dimensions: 1536 }),
         // DEPRECATED
         deprecated_featured: t.boolean("featured").notNull().default(false),
         deprecated_callToAction: t.jsonb("call_to_action").$type<{
@@ -323,7 +330,10 @@ export const events = pgTable(
             url: string;
         }>(),
     }),
-    (t) => [unique("events_handle_community_unique").on(t.handle, t.community)],
+    (t) => [
+        unique("events_handle_community_unique").on(t.handle, t.community),
+        index("events_cosine_index").using("hnsw", t.embedding.op("vector_cosine_ops")),
+    ],
 );
 
 export const eventActions = pgTable("event_actions", (t) => ({
@@ -387,10 +397,14 @@ export const rounds = pgTable(
         maxDescriptionLength: t.integer("max_description_length").notNull().default(2000),
         linkRegex: t.text("link_regex"),
         maxProposals: t.smallint("max_proposals").default(1),
+        embedding: t.vector({ dimensions: 1536 }),
         // DEPRECATED
         deprecated_featured: t.boolean("featured").notNull().default(false),
     }),
-    (t) => [unique("rounds_handle_community_unique").on(t.handle, t.community)],
+    (t) => [
+        unique("rounds_handle_community_unique").on(t.handle, t.community),
+        index("rounds_cosine_index").using("hnsw", t.embedding.op("vector_cosine_ops")),
+    ],
 );
 
 export const roundActions = pgTable("round_actions", (t) => ({
@@ -433,20 +447,25 @@ export const assets = pgTable("assets", (t) => ({
     tokenId: t.text("token_id"),
 }));
 
-export const proposals = pgTable("proposals", (t) => ({
-    id: t.uuid().primaryKey().defaultRandom(),
-    user: t.uuid().notNull(),
-    round: t.uuid().notNull(),
-    title: t.text().notNull(),
-    content: t.text(),
-    image: t.text(),
-    video: t.text(),
-    url: t.text(),
-    createdAt: t.timestamp("created_at").notNull().defaultNow(),
-    hidden: t.boolean().notNull().default(false),
-    published: t.boolean().notNull().default(true),
-    winner: t.smallint(),
-}));
+export const proposals = pgTable(
+    "proposals",
+    (t) => ({
+        id: t.uuid().primaryKey().defaultRandom(),
+        user: t.uuid().notNull(),
+        round: t.uuid().notNull(),
+        title: t.text().notNull(),
+        content: t.text(),
+        image: t.text(),
+        video: t.text(),
+        url: t.text(),
+        createdAt: t.timestamp("created_at").notNull().defaultNow(),
+        hidden: t.boolean().notNull().default(false),
+        published: t.boolean().notNull().default(true),
+        winner: t.smallint(),
+        embedding: t.vector({ dimensions: 1536 }),
+    }),
+    (t) => [index("proposals_cosine_index").using("hnsw", t.embedding.op("vector_cosine_ops"))],
+);
 
 export const votes = pgTable("votes", (t) => ({
     id: t.uuid().primaryKey().defaultRandom(),
@@ -478,8 +497,12 @@ export const raffles = pgTable(
             .jsonb("entry_action_inputs")
             .array()
             .$type<Array<{ [key: string]: any }>>(),
+        embedding: t.vector({ dimensions: 1536 }),
     }),
-    (t) => [unique("raffles_handle_community_unique").on(t.handle, t.community)],
+    (t) => [
+        unique("raffles_handle_community_unique").on(t.handle, t.community),
+        index("raffles_cosine_index").using("hnsw", t.embedding.op("vector_cosine_ops")),
+    ],
 );
 
 export const raffleEntries = pgTable("raffle_entries", (t) => ({
@@ -496,3 +519,76 @@ export const nounsvitationalVotes = pgTable("nounsvitational_votes", (t) => ({
     user: t.uuid().notNull(),
     count: t.integer().notNull(),
 }));
+
+export const products = pgTable(
+    "products",
+    (t) => ({
+        id: t.uuid().primaryKey().defaultRandom(),
+        handle: t.text().notNull(),
+        shopifyId: t.text("shopify_id").notNull(),
+        name: t.text().notNull(),
+        description: t.jsonb().$type<any>(),
+        collection: t.uuid(),
+        event: t.uuid(),
+        community: t.uuid().notNull(),
+        requiresShipping: t.boolean("requires_shipping").notNull(),
+        active: t.boolean().notNull().default(true),
+        embedding: t.vector({ dimensions: 1536 }),
+    }),
+    (t) => [
+        unique("products_handle_community_unique").on(t.handle, t.community),
+        index("products_cosine_index").using("hnsw", t.embedding.op("vector_cosine_ops")),
+    ],
+);
+
+export const productVariants = pgTable("product_variants", (t) => ({
+    id: t.uuid().primaryKey().defaultRandom(),
+    product: t.uuid().notNull(),
+    shopifyId: t.text("shopify_id").notNull(),
+    images: t.text().array().notNull(),
+    size: t.text({ enum: ["xs", "s", "m", "l", "xl", "2xl", "3xl", "4xl"] }),
+    color: t.jsonb().$type<{
+        name: string;
+        hex: string;
+    }>(),
+    price: t.numeric({ precision: 12, scale: 2, mode: "number" }).notNull(),
+    inventory: t.integer(),
+}));
+
+export const collections = pgTable(
+    "collections",
+    (t) => ({
+        id: t.uuid().primaryKey().defaultRandom(),
+        handle: t.text().notNull(),
+        community: t.uuid().notNull(),
+        name: t.text().notNull(),
+        image: t.text().notNull(),
+        featured: t.boolean().notNull().default(false),
+    }),
+    (t) => [unique("collections_handle_community_unique").on(t.handle, t.community)],
+);
+
+export const carts = pgTable(
+    "carts",
+    (t) => ({
+        id: t.uuid().primaryKey().defaultRandom(),
+        user: t.uuid().notNull(),
+        product: t.uuid().notNull(),
+        variant: t.uuid().notNull(),
+        quantity: t.integer().notNull(),
+    }),
+    (t) => [unique("carts_user_product_variant_unique").on(t.user, t.product, t.variant)],
+);
+
+export const orders = pgTable(
+    "orders",
+    (t) => ({
+        id: t.uuid().primaryKey().defaultRandom(),
+        platform: t.text({ enum: ["shopify", "stripe"] }).notNull(),
+        identifier: t.text().notNull(),
+        user: t.uuid().notNull(),
+        community: t.uuid().notNull(),
+        createdAt: t.timestamp("created_at").notNull(),
+    }),
+    (t) => [unique("orders_platform_identifier_unique").on(t.platform, t.identifier)],
+);

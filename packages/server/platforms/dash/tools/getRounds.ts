@@ -3,13 +3,16 @@ import { z } from "zod";
 import type { DashRuntimeContext } from "~/packages/agent/src/mastra/agents";
 import { db } from "~/packages/db";
 import { proposals, rounds, votes } from "~/packages/db/schema/public";
-import { eq } from "drizzle-orm";
+import { cosineDistance, eq } from "drizzle-orm";
+import { embed } from "ai";
+import { openai } from "@ai-sdk/openai";
 
 export const getRounds = createTool({
     id: "getRounds",
     description: "Get round(s) for a community",
     inputSchema: z.object({
         limit: z.number().max(3).optional().describe("The number of rounds to get with a max of 3"),
+        search: z.string().optional().describe("A search term or phrase to filter rounds by"),
     }),
     outputSchema: z.array(
         z.object({
@@ -32,8 +35,22 @@ export const getRounds = createTool({
             throw new Error("Community is required to get rounds");
         }
 
+        let searchEmbedding: number[] | undefined;
+
+        if (context.search) {
+            const { embedding } = await embed({
+                model: openai.embedding("text-embedding-3-small"),
+                value: context.search,
+            });
+
+            searchEmbedding = embedding;
+        }
+
         const fetchedRounds = await db.pgpool.query.rounds.findMany({
             where: eq(rounds.community, community.id),
+            orderBy: searchEmbedding
+                ? cosineDistance(rounds.embedding, searchEmbedding)
+                : undefined,
             with: {
                 votes: {
                     where: eq(votes.user, user.id),
