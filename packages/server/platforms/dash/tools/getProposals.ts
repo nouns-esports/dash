@@ -74,9 +74,9 @@ export const getProposals = createTool({
                 : undefined,
             with: {
                 proposals: {
-                    where: proposalSearchEmbedding
-                        ? lt(cosineDistance(proposals.embedding, proposalSearchEmbedding), 0.75)
-                        : undefined,
+                    // where: proposalSearchEmbedding
+                    //     ? lt(cosineDistance(proposals.embedding, proposalSearchEmbedding), 0.75)
+                    //     : undefined,
                     limit: context.limit ?? 3,
                     orderBy: proposalSearchEmbedding
                         ? cosineDistance(proposals.embedding, proposalSearchEmbedding)

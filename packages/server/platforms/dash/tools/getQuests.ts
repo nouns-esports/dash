@@ -61,9 +61,9 @@ export const getQuests = createTool({
                 context.completed
                     ? sql`NOT EXISTS (SELECT 1 FROM quest_completions WHERE quest_completions.quest = quests.id AND quest_completions.user = ${user.id})`
                     : undefined,
-                searchEmbedding
-                    ? lt(cosineDistance(quests.embedding, searchEmbedding), 0.75)
-                    : undefined,
+                // searchEmbedding
+                //     ? lt(cosineDistance(quests.embedding, searchEmbedding), 0.75)
+                //     : undefined,
             ),
             orderBy: searchEmbedding
                 ? [cosineDistance(quests.embedding, searchEmbedding), desc(quests.createdAt)]

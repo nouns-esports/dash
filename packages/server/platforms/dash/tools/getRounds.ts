@@ -49,9 +49,9 @@ export const getRounds = createTool({
         const fetchedRounds = await db.pgpool.query.rounds.findMany({
             where: and(
                 eq(rounds.community, community.id),
-                searchEmbedding
-                    ? lt(cosineDistance(rounds.embedding, searchEmbedding), 0.75)
-                    : undefined,
+                // searchEmbedding
+                //     ? lt(cosineDistance(rounds.embedding, searchEmbedding), 0.75)
+                //     : undefined,
             ),
             orderBy: searchEmbedding
                 ? cosineDistance(rounds.embedding, searchEmbedding)

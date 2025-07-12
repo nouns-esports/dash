@@ -47,9 +47,9 @@ export const getEvents = createTool({
         const fetchedEvents = await db.pgpool.query.events.findMany({
             where: and(
                 eq(events.community, community.id),
-                searchEmbedding
-                    ? lt(cosineDistance(events.embedding, searchEmbedding), 0.75)
-                    : undefined,
+                // searchEmbedding
+                //     ? lt(cosineDistance(events.embedding, searchEmbedding), 0.75)
+                //     : undefined,
             ),
             orderBy: searchEmbedding
                 ? [cosineDistance(events.embedding, searchEmbedding), desc(events.start)]

@@ -53,9 +53,9 @@ export const getProducts = createTool({
             where: and(
                 eq(products.community, community.id),
                 context.event ? eq(products.event, context.event) : undefined,
-                searchEmbedding
-                    ? lt(cosineDistance(products.embedding, searchEmbedding), 0.75)
-                    : undefined,
+                // searchEmbedding
+                //     ? lt(cosineDistance(products.embedding, searchEmbedding), 0.75)
+                //     : undefined,
                 eq(products.active, true),
             ),
             orderBy: searchEmbedding
