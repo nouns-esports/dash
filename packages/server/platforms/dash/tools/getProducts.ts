@@ -56,6 +56,7 @@ export const getProducts = createTool({
                 searchEmbedding
                     ? lt(cosineDistance(products.embedding, searchEmbedding), 0.5)
                     : undefined,
+                eq(products.active, true),
             ),
             orderBy: searchEmbedding
                 ? cosineDistance(products.embedding, searchEmbedding)
