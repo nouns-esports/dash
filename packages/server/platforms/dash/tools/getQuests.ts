@@ -61,6 +61,7 @@ export const getQuests = createTool({
                 context.completed
                     ? sql`NOT EXISTS (SELECT 1 FROM quest_completions WHERE quest_completions.quest = quests.id AND quest_completions.user = ${user.id})`
                     : undefined,
+                eq(quests.active, true),
                 // searchEmbedding
                 //     ? lt(cosineDistance(quests.embedding, searchEmbedding), 0.75)
                 //     : undefined,

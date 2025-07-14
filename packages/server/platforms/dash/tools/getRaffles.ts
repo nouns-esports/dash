@@ -1,5 +1,5 @@
 import { db } from "~/packages/db";
-import { and, cosineDistance, desc, eq, gte, lt, sql } from "drizzle-orm";
+import { and, cosineDistance, desc, eq, gt, lt, sql } from "drizzle-orm";
 import { raffleEntries, raffles } from "~/packages/db/schema/public";
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
@@ -55,6 +55,7 @@ export const getRaffles = createTool({
         const fetchedRaffles = await db.pgpool.query.raffles.findMany({
             where: and(
                 eq(raffles.community, community.id),
+                gt(raffles.end, new Date()),
                 // searchEmbedding
                 //     ? lt(cosineDistance(raffles.embedding, searchEmbedding), 0.75)
                 //     : undefined,
