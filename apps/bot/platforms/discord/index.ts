@@ -154,8 +154,10 @@ client.on("ready", () => {
 // });
 
 client.on("interactionCreate", async (interaction) => {
-    console.log("Interaction:", interaction.id);
-    const type = interaction.id.split(":")[0];
+    if (!interaction.isButton()) return;
+
+    console.log("Interaction:", interaction.customId);
+    const type = interaction.customId.split(":")[0];
 
     console.log("Type:", type);
 
