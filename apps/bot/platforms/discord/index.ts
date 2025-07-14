@@ -154,15 +154,20 @@ client.on("ready", () => {
 // });
 
 client.on("interactionCreate", async (interaction) => {
+    console.log("Interaction:", interaction.id);
     const type = interaction.id.split(":")[0];
 
+    console.log("Type:", type);
+
     if (!("reply" in interaction)) {
+        console.log("No reply");
         return;
     }
 
     await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
 
     if (!interaction.guild) {
+        console.log("No guild");
         return interaction.editReply({
             content: "Sorry, I can only interact in servers right now.",
         });
@@ -173,6 +178,7 @@ client.on("interactionCreate", async (interaction) => {
     });
 
     if (!community) {
+        console.log("No community");
         return interaction.editReply({
             content:
                 "Community not found, please reach out to the server owner to finish setting up Dash.",
@@ -195,8 +201,11 @@ client.on("interactionCreate", async (interaction) => {
     }
 
     if (type === "quest") {
+        console.log("Its a quest");
         const id = interaction.id.split(":")[1];
         const action = interaction.id.split(":")[2];
+
+        console.log("Action:", id, action);
 
         if (action === "check") {
             const result = await checkQuest({
