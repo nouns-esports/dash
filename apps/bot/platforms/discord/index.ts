@@ -204,8 +204,8 @@ client.on("interactionCreate", async (interaction) => {
 
     if (type === "quest") {
         console.log("Its a quest");
-        const id = interaction.id.split(":")[1];
-        const action = interaction.id.split(":")[2];
+        const id = interaction.customId.split(":")[1];
+        const action = interaction.customId.split(":")[2];
 
         console.log("Action:", id, action);
 
