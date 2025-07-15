@@ -14,7 +14,7 @@ export function RaffleEmbed(props: {
             url: `https://nouns.gg/raffles/${props.raffle.id}`,
             color: "#4A5EEB",
             footer: {
-                text: `${props.raffle.winners} winners`,
+                text: `${props.raffle.winners} winner${props.raffle.winners === 1 ? "" : "s"}`,
             },
         }),
         components: [
