@@ -9,7 +9,8 @@
         "allowJs": true,
 
         // Bundler mode
-        "moduleResolution": "bundler",
+        // "moduleResolution": "bundler",
+        "moduleResolution": "node",
         "allowImportingTsExtensions": true,
         "verbatimModuleSyntax": true,
         "noEmit": true,
@@ -27,7 +28,6 @@
 
         "baseUrl": ".",
         "paths": {
-            "redaxios": ["axios"],
             "~/*": ["./*"]
         }
     },
