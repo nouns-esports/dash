@@ -223,7 +223,7 @@ client.on("interactionCreate", async (interaction) => {
 
                 return interaction.editReply({
                     content: {
-                        claimed: `Quest claimed, you've earned ${result.xp}xp!`,
+                        claimed: `🎉 Quest claimed, you've earned ${result.xp}xp!`,
                         "already-completed": "Looks like you already completed this quest.",
                         "not-completed":
                             "Doesn't look like you've completed all the actions for this quest yet.",

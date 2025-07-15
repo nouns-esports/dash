@@ -98,7 +98,7 @@ export async function checkQuest(input: { user: string; quest: string }) {
             quest: quest.id,
             user: input.user,
             amount: quest.xp,
-            community: quest.community,
+            community: quest.community.id,
         });
 
         await tx
@@ -106,7 +106,7 @@ export async function checkQuest(input: { user: string; quest: string }) {
             .values({
                 user: input.user,
                 xp: quest.xp,
-                community: quest.community,
+                community: quest.community.id,
             })
             .onConflictDoUpdate({
                 target: [passes.user, passes.community],
