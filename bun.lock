@@ -76,7 +76,7 @@
       "dependencies": {
         "@mastra/client-js": "0.10.11",
         "@neynar/nodejs-sdk": "^1.68.0",
-        "@privy-io/server-auth": "1.28.4",
+        "@privy-io/server-auth": "1.26.2",
         "pinata-web3": "^0.5.4",
       },
     },
@@ -690,11 +690,11 @@
 
     "@ponder/utils": ["@ponder/utils@0.2.8", "", { "peerDependencies": { "typescript": ">=5.0.4", "viem": ">=2" }, "optionalPeers": ["typescript"] }, "sha512-eI3ijbE/eLeA4tEYA7QoIDPRsf+qhTKs1oTW33Ik4CaJPmTAxsYN5KZYxQwNqGwOPFHQn60QvAQ7+Ti2n9ql6Q=="],
 
-    "@privy-io/api-base": ["@privy-io/api-base@1.5.2", "", { "dependencies": { "zod": "^3.24.3" } }, "sha512-0eJBoQNmCSsWSWhzEVSU8WqPm7bgeN6VaAmqeXvjk8Ni0jM8nyTYjmRAqiCSs3mRzsnlQVchkGR6lsMTHkHKbw=="],
+    "@privy-io/api-base": ["@privy-io/api-base@1.5.1", "", { "dependencies": { "zod": "^3.24.3" } }, "sha512-UokueOxl2hoW+kfFTzwV8uqwCNajSaJJEGSWHpsuKvdDQ8ePwXe53Gr5ptnKznaZlMLivc25mrv92bVEJbclfQ=="],
 
-    "@privy-io/public-api": ["@privy-io/public-api@2.39.0", "", { "dependencies": { "@privy-io/api-base": "1.5.2", "bs58": "^5.0.0", "libphonenumber-js": "^1.10.31", "viem": "^2", "zod": "^3.24.3" } }, "sha512-By+3Uf6lve2E36VS1bmcCNQ5ZRxJNRlG5+7p7g05DOfi5YorY610bvXzwFrTzJeRp00pmybMYBkvAnDaMtcivQ=="],
+    "@privy-io/public-api": ["@privy-io/public-api@2.33.0", "", { "dependencies": { "@privy-io/api-base": "1.5.1", "bs58": "^5.0.0", "libphonenumber-js": "^1.10.31", "viem": "^2", "zod": "^3.24.3" } }, "sha512-TJuHwe8tWmzGSLMcmwIv0yP3vxkz3EnKOeJZI3Ys3h1UPkJzDIotcBev9SibqRDiilTYn5u6mst9K3bfwd7f1Q=="],
 
-    "@privy-io/server-auth": ["@privy-io/server-auth@1.28.4", "", { "dependencies": { "@hpke/chacha20poly1305": "^1.6.2", "@hpke/core": "^1.7.2", "@noble/curves": "^1.6.0", "@noble/hashes": "^1.5.0", "@privy-io/public-api": "2.39.0", "@solana/web3.js": "^1.95.8", "canonicalize": "^2.0.0", "dotenv": "^16.0.3", "jose": "^4.10.4", "node-fetch-native": "^1.4.0", "redaxios": "^0.5.1", "svix": ">=1.29.0 <= 1.37.0 || ^1.40.0", "ts-case-convert": "^2.0.2", "type-fest": "^3.6.1" }, "peerDependencies": { "ethers": "^6", "viem": "^2.24.1" }, "optionalPeers": ["ethers", "viem"] }, "sha512-XIlqq3ClGsiygIuKRPU//zfW5FXfXd3Wch7d8Z64IX3ViimBrkN6ChQVg0SADhI3fvcYkcP5CObdq3AOD/QAjg=="],
+    "@privy-io/server-auth": ["@privy-io/server-auth@1.26.2", "", { "dependencies": { "@hpke/chacha20poly1305": "^1.6.2", "@hpke/core": "^1.7.2", "@noble/curves": "^1.6.0", "@noble/hashes": "^1.5.0", "@privy-io/public-api": "2.33.0", "@solana/web3.js": "^1.95.8", "canonicalize": "^2.0.0", "dotenv": "^16.0.3", "jose": "^4.10.4", "node-fetch-native": "^1.4.0", "redaxios": "^0.5.1", "svix": ">=1.29.0 <= 1.37.0 || ^1.40.0", "ts-case-convert": "^2.0.2", "type-fest": "^3.6.1" }, "peerDependencies": { "ethers": "^6", "viem": "^2.24.1" }, "optionalPeers": ["ethers", "viem"] }, "sha512-4ND6aLaqaaMGP9U3nVL6Wy+jaey8j6Ez7gYOG/D8Nd18qTet3bjJDOXE3JxmNmNuOc8ozwiE+wWJfTrH+jp0/Q=="],
 
     "@protobufjs/aspromise": ["@protobufjs/aspromise@1.1.2", "", {}, "sha512-j+gKExEuLmKwvz3OgROXtrJ2UG2x8Ch2YZUxahh+s1F2HZ+wAceUNLkvy6zKCPVRkU++ZWQrdxsUeQXmcg4uoQ=="],
 
