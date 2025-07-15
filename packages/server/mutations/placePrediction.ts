@@ -55,14 +55,11 @@ export async function placePrediction(input: {
         };
     }
 
-    await db.primary.transaction(async (tx) => {
-        await tx.insert(bets).values({
-            user: input.user,
-            prediction: input.prediction,
-            outcome: input.outcome,
-            timestamp: now,
-            amount: 0,
-        });
+    await db.primary.insert(bets).values({
+        user: input.user,
+        prediction: input.prediction,
+        outcome: input.outcome,
+        amount: 0,
     });
 
     return {
