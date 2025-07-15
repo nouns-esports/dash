@@ -1,0 +1,2 @@
+[imports]
+redaxios = "npm:redaxios/dist/redaxios.cjs"
