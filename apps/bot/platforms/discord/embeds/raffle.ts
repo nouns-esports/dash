@@ -22,7 +22,6 @@ export function RaffleEmbed(props: {
                 Button({
                     label: "Enter",
                     type: "primary",
-                    disabled: true,
                     customId: `raffle:${props.raffle.id}:enter`,
                 }),
                 Button({
