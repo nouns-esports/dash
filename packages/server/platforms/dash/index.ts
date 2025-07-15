@@ -21,6 +21,10 @@ import { linkDiscord } from "./actions/user/linkDiscord";
 import { linkTwitter } from "./actions/user/linkTwitter";
 import { linkFarcaster } from "./actions/user/linkFarcaster";
 import { reachPercentile } from "./actions/xp/reachPercentile";
+import { linkWallet } from "./actions/user/linkWallet";
+import { linkEmail } from "./actions/user/linkEmail";
+import { leaderboardPosition } from "./actions/xp/leaderboardPosition";
+import { purchaseItem } from "./actions/shop/purchaseItem";
 
 export const dash = createPlatform({
     name: "Dash",
@@ -35,7 +39,11 @@ export const dash = createPlatform({
         linkDiscord,
         linkFarcaster,
         linkTwitter,
+        linkWallet,
+        linkEmail,
         reachPercentile,
+        leaderboardPosition,
+        purchaseItem,
     },
     tools: {
         getEvents,

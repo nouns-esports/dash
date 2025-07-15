@@ -45,6 +45,8 @@ import { checkQuest } from "~/packages/server/mutations/checkQuest";
 import { logConsole } from "./tools/logConsole";
 import { getProposals } from "~/packages/server/platforms/dash/tools/getProposals";
 import { ProposalEmbed } from "./embeds/proposal";
+import { placePrediction } from "~/packages/server/mutations/placePrediction";
+import { enterRaffle } from "~/packages/server/mutations/enterRaffle";
 
 // import { createCommunity } from "~/packages/server/mutations/createCommunity";
 // import { getCommunity } from "~/packages/server/queries/getCommunity";
@@ -154,38 +156,13 @@ client.on("ready", () => {
 // });
 
 client.on("interactionCreate", async (interaction) => {
-    if (!interaction.isButton()) return;
-
-    console.log("Interaction:", interaction.customId);
-    const type = interaction.customId.split(":")[0];
-
-    console.log("Type:", type);
-
-    if (!("reply" in interaction)) {
-        console.log("No reply");
-        return;
-    }
-
-    await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
-
-    if (!interaction.guild) {
-        console.log("No guild");
-        return interaction.editReply({
-            content: "Sorry, I can only interact in servers right now.",
-        });
-    }
+    if (!interaction.guild) return;
 
     const community = await getCommunityFromServer({
         server: interaction.guild.id,
     });
 
-    if (!community) {
-        console.log("No community");
-        return interaction.editReply({
-            content:
-                "Community not found, please reach out to the server owner to finish setting up Dash.",
-        });
-    }
+    if (!community) return;
 
     let user = await getUser({
         identifier: interaction.user.id,
@@ -202,102 +179,129 @@ client.on("interactionCreate", async (interaction) => {
         });
     }
 
-    if (type === "quest") {
-        console.log("Its a quest");
-        const id = interaction.customId.split(":")[1];
-        const action = interaction.customId.split(":")[2];
+    if (interaction.isButton()) {
+        const type = interaction.customId.split(":")[0];
 
-        console.log("Action:", id, action);
+        await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
 
-        if (action === "check") {
-            const result = await checkQuest({
-                user: user.id,
-                quest: id,
-            });
+        if (type === "quest") {
+            const id = interaction.customId.split(":")[1];
+            const action = interaction.customId.split(":")[2];
 
-            return interaction.editReply({
-                content: {
-                    claimed: `Quest claimed, you've earned ${result.xp}xp!`,
-                    "already-completed": "Looks like you already completed this quest.",
-                    "not-completed":
-                        "Doesn't look like you've completed all the actions for this quest yet.",
-                }[result.state],
-            });
-        }
-    }
+            if (action === "check") {
+                const result = await checkQuest({
+                    user: user.id,
+                    quest: id,
+                });
 
-    if (type === "prediction") {
-        const id = interaction.id.split(":")[1];
-        const action = interaction.id.split(":")[2];
-
-        const prediction = await getPrediction({
-            id,
-            user: user.id,
-        });
-
-        if (!prediction) {
-            return interaction.editReply({
-                content: "Something went wrong and I couldn't find the prediction.",
-            });
-        }
-
-        if (action === "predict") {
-            return interaction.editReply({
-                content: "Choose an outcome for your prediction",
-                components: [
-                    Row([
-                        Select({
-                            customId: `prediction:${prediction.id}:select-outcome`,
-                            placeholder: "Select outcome",
-                            maxValues: 1,
-                            options: prediction.outcomes.map((outcome) => ({
-                                label: outcome.name,
-                                value: outcome.id,
-                            })),
-                        }),
-                    ]).toJSON(),
-                ],
-            });
-        }
-
-        if (action === `prediction:${prediction.id}:predict` && interaction.isStringSelectMenu()) {
-            const selectedOutcome = interaction.values[0];
-
-            const outcome = prediction.outcomes.find((outcome) => outcome.id === selectedOutcome);
-
-            if (!outcome) {
                 return interaction.editReply({
-                    content: "Outcome not found",
+                    content: {
+                        claimed: `Quest claimed, you've earned ${result.xp}xp!`,
+                        "already-completed": "Looks like you already completed this quest.",
+                        "not-completed":
+                            "Doesn't look like you've completed all the actions for this quest yet.",
+                    }[result.state],
+                });
+            }
+        }
+
+        if (type === "raffle") {
+            const id = interaction.customId.split(":")[1];
+            const action = interaction.customId.split(":")[2];
+
+            if (action === "enter") {
+                const result = await enterRaffle({
+                    user: user.id,
+                    raffle: id,
+                    amount: 1,
+                });
+
+                return interaction.editReply({
+                    content: {
+                        entered: `You've entered the raffle for ${result.xp}xp!`,
+                    }[result.state],
+                });
+            }
+        }
+
+        if (type === "prediction") {
+            const id = interaction.customId.split(":")[1];
+            const action = interaction.customId.split(":")[2];
+
+            const prediction = await getPrediction({
+                id,
+                user: user.id,
+            });
+
+            if (!prediction) {
+                return interaction.editReply({
+                    content: "Something went wrong and I couldn't find the prediction.",
                 });
             }
 
-            return interaction.editReply({
-                content: `Successfully placed your prediction for ${outcome.name}`,
-            });
+            if (action === "predict") {
+                return interaction.editReply({
+                    content: "Choose an outcome for your prediction",
+                    components: [
+                        Row([
+                            Select({
+                                customId: `prediction:${prediction.id}:select-outcome`,
+                                placeholder: "Select outcome",
+                                maxValues: 1,
+                                options: prediction.outcomes.map((outcome) => ({
+                                    label: outcome.name,
+                                    value: outcome.id,
+                                })),
+                            }),
+                        ]).toJSON(),
+                    ],
+                });
+            }
         }
+    } else if (interaction.isStringSelectMenu()) {
+        const type = interaction.customId.split(":")[0];
 
-        if (interaction.isButton() && action === "predict") {
-            return interaction.editReply({
-                content: "Choose an outcome for your prediction",
-                components: [
-                    Row([
-                        Select({
-                            customId: `prediction:${prediction.id}:predict`,
-                            placeholder: "Select outcome",
-                            maxValues: 1,
-                            options: prediction.outcomes.map((outcome) => ({
-                                label: outcome.name,
-                                value: outcome.id,
-                            })),
-                        }),
-                    ]).toJSON(),
-                ],
+        await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
+
+        if (type === "prediction") {
+            const id = interaction.customId.split(":")[1];
+            const action = interaction.customId.split(":")[2];
+
+            const prediction = await getPrediction({
+                id,
+                user: user.id,
             });
-        }
 
-        interaction.editReply({
-            content: "Sorry something went wrong, please try again.",
-        });
+            if (!prediction) {
+                return interaction.editReply({
+                    content: "Something went wrong and I couldn't find the prediction.",
+                });
+            }
+
+            if (action === "select-outcome") {
+                const selectedOutcome = interaction.values[0];
+
+                const outcome = prediction.outcomes.find(
+                    (outcome) => outcome.id === selectedOutcome,
+                );
+
+                if (!outcome) {
+                    return interaction.editReply({
+                        content: "Outcome not found",
+                    });
+                }
+
+                await placePrediction({
+                    prediction: prediction.id,
+                    outcome: outcome.id,
+                    user: user.id,
+                });
+
+                return interaction.editReply({
+                    content: `Aknowledged your prediction for ${outcome.name}`,
+                });
+            }
+        }
     }
 });
 

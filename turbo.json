@@ -1,42 +1,43 @@
 {
-	"$schema": "https://turborepo.com/schema.json",
-	"globalEnv": [
-		"AGENT_TOKEN",
-		"DISCORD_CLIENT_ID",
-		"DISCORD_TOKEN",
-		"FARCASTER_FID",
-		"MASTRA_SERVER",
-		"NEYNAR_API_KEY",
-		"OPENAI_API_KEY",
-		"PGPOOL_URL",
-		"PINATA_JWT",
-		"PRIMARY_DATABASE_URL",
-		"PRIVY_APP_SECRET",
-		"PRIVY_VERIFICATION_KEY",
-		"PRIVY_WEBHOOK_SIGNING_KEY",
-		"TWITTER_COOKIES",
-		"TWITTER_EMAIL",
-		"TWITTER_PASSWORD",
-		"TWITTER_USERNAME",
-		"NEXT_PUBLIC_DOMAIN",
-		"NEXT_PUBLIC_ENVIRONMENT",
-		"NEXT_PUBLIC_POSTHOG_HOST",
-		"NEXT_PUBLIC_POSTHOG_KEY",
-		"NEXT_PUBLIC_PRIVY_APP_ID"
-	],
-	"tasks": {
-		"build": {
-			"dependsOn": ["^build"],
-			"outputs": [".next/**", "!.next/cache/**"],
-			"cache": false
-		},
-		"dev": {
-			"cache": false,
-			"persistent": true
-		},
-		"start": {
-			"cache": false,
-			"persistent": true
-		}
-	}
+    "$schema": "https://turborepo.com/schema.json",
+    "globalEnv": [
+        "AGENT_TOKEN",
+        "DISCORD_CLIENT_ID",
+        "DISCORD_TOKEN",
+        "FARCASTER_FID",
+        "INFURA_API_KEY",
+        "MASTRA_SERVER",
+        "NEYNAR_API_KEY",
+        "OPENAI_API_KEY",
+        "PGPOOL_URL",
+        "PINATA_JWT",
+        "PRIMARY_DATABASE_URL",
+        "PRIVY_APP_SECRET",
+        "PRIVY_VERIFICATION_KEY",
+        "PRIVY_WEBHOOK_SIGNING_KEY",
+        "TWITTER_COOKIES",
+        "TWITTER_EMAIL",
+        "TWITTER_PASSWORD",
+        "TWITTER_USERNAME",
+        "NEXT_PUBLIC_DOMAIN",
+        "NEXT_PUBLIC_ENVIRONMENT",
+        "NEXT_PUBLIC_POSTHOG_HOST",
+        "NEXT_PUBLIC_POSTHOG_KEY",
+        "NEXT_PUBLIC_PRIVY_APP_ID"
+    ],
+    "tasks": {
+        "build": {
+            "dependsOn": ["^build"],
+            "outputs": [".next/**", "!.next/cache/**"],
+            "cache": false
+        },
+        "dev": {
+            "cache": false,
+            "persistent": true
+        },
+        "start": {
+            "cache": false,
+            "persistent": true
+        }
+    }
 }

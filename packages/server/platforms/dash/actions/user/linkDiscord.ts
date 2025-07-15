@@ -4,12 +4,12 @@ import { z } from "zod";
 export const linkDiscord = createAction({
     name: "linkDiscord",
     schema: z.object({
-        minAge: z.number().optional().describe("The minimum account age, in months"),
+        minAge: z.number().nullable().describe("The minimum account age, in months"),
     }),
     check: async ({ input, user }) => {
         for (const account of user.accounts) {
             if (account.platform === "discord") {
-                if (input.minAge !== undefined) {
+                if (input.minAge !== null) {
                     const creationDate = new Date(
                         Number((BigInt(account.identifier) >> BigInt(22)) + BigInt(1420070400000)),
                     );

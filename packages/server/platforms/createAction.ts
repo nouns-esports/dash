@@ -18,7 +18,6 @@ export function createAction<TSchema extends z.AnyZodObject = z.AnyZodObject>(ac
             user: User;
             community: Community;
         }) => {
-            console.log("INPUT", props.input);
             const parsed = action.schema.safeParse(props.input);
 
             if (!parsed.success) {

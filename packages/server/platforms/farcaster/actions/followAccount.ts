@@ -5,14 +5,14 @@ import { neynarClient } from "~/packages/server/clients/neynar";
 export const followAccount = createAction({
     name: "Follow Account",
     schema: z.object({
-        account: z.number().describe("The account to follow"),
+        fid: z.number().describe("The Farcaster account id to follow"),
     }),
     check: async ({ user, input }) => {
         const account = user.accounts.find((account) => account.platform === "farcaster");
 
         if (!account) return false;
 
-        const response = await neynarClient.fetchBulkUsers([input.account], {
+        const response = await neynarClient.fetchBulkUsers([input.fid], {
             viewerFid: Number(account.identifier),
         });
 

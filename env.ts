@@ -10,6 +10,7 @@ export const env = createEnv({
         DISCORD_CLIENT_ID: z.string(),
         DISCORD_TOKEN: z.string(),
         FARCASTER_FID: z.string(),
+        INFURA_API_KEY: z.string(),
         MASTRA_SERVER: z.string().url(),
         NEYNAR_API_KEY: z.string(),
         OPENAI_API_KEY: z.string(),
@@ -39,4 +40,3 @@ export const env = createEnv({
         NEXT_PUBLIC_PRIVY_APP_ID: process.env.NEXT_PUBLIC_PRIVY_APP_ID,
     },
 });
-
