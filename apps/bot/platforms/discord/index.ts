@@ -48,6 +48,7 @@ import { ProposalEmbed } from "./embeds/proposal";
 import { placePrediction } from "~/packages/server/mutations/placePrediction";
 import { enterRaffle } from "~/packages/server/mutations/enterRaffle";
 import { tryCatch } from "~/packages/server/utils/tryCatch";
+import { getRaffle } from "~/packages/server/queries/getRaffle";
 
 // import { createCommunity } from "~/packages/server/mutations/createCommunity";
 // import { getCommunity } from "~/packages/server/queries/getCommunity";
@@ -180,6 +181,8 @@ client.on("interactionCreate", async (interaction) => {
         });
     }
 
+    const pass = user.passes.find((pass) => pass.community === community.id);
+
     if (interaction.isButton()) {
         const type = interaction.customId.split(":")[0];
 
@@ -237,17 +240,20 @@ client.on("interactionCreate", async (interaction) => {
             const action = interaction.customId.split(":")[2];
 
             if (action === "enter") {
-                const result = await enterRaffle({
-                    user: user.id,
-                    raffle: id,
-                    amount: 1,
-                });
-
-                return interaction.editReply({
-                    content: {
-                        entered: `You've entered the raffle for ${result.xp}xp!`,
-                    }[result.state],
-                });
+                await interaction.showModal(
+                    Modal({
+                        customId: `raffle:${id}:enter:select-amount`,
+                        title: "Enter Raffle",
+                        inputs: [
+                            Input({
+                                customId: `raffle:${id}:enter:select-amount:value`,
+                                label: "Amount",
+                                placeholder: "1",
+                                style: "short",
+                            }),
+                        ],
+                    }),
+                );
             }
         }
 
@@ -336,6 +342,88 @@ client.on("interactionCreate", async (interaction) => {
                     content: {
                         "already-placed": "You've already placed this prediction.",
                         placed: `🔮 Prediction placed for ${outcome.name}`,
+                    }[result.state],
+                });
+            }
+        }
+    } else if (interaction.isModalSubmit()) {
+        const type = interaction.customId.split(":")[0];
+
+        await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
+
+        if (type === "raffle") {
+            const id = interaction.customId.split(":")[1];
+            const action = interaction.customId.split(":")[2];
+
+            const raffle = await getRaffle({
+                id,
+            });
+
+            if (!raffle) {
+                return interaction.editReply({
+                    content: "Something went wrong and I couldn't find the raffle.",
+                });
+            }
+
+            if (action === "select-amount") {
+                const amount = parseInt(
+                    interaction.fields.getTextInputValue(`raffle:${id}:enter:select-amount:value`),
+                );
+
+                if (Number.isNaN(amount)) {
+                    return interaction.editReply({
+                        content: "Amount should be a number",
+                    });
+                }
+
+                if (amount <= 0) {
+                    return interaction.editReply({
+                        content: "Amount should be greater than 0",
+                    });
+                }
+
+                if (!pass || amount * raffle.gold > pass.points) {
+                    return interaction.editReply({
+                        content: "You don't have enough points.",
+                    });
+                }
+
+                const [result, error] = await tryCatch(
+                    enterRaffle({
+                        user: user.id,
+                        raffle: id,
+                        amount,
+                    }),
+                );
+
+                if (error) {
+                    if (error.name === "RAFFLE_NOT_STARTED") {
+                        return interaction.editReply({
+                            content: "The raffle has not started yet.",
+                        });
+                    }
+
+                    if (error.name === "RAFFLE_ENDED") {
+                        return interaction.editReply({
+                            content: "The raffle has ended.",
+                        });
+                    }
+
+                    if (error.name === "RAFFLE_ENTRY_LIMIT_REACHED") {
+                        return interaction.editReply({
+                            content:
+                                "You've reached the maximum number of entries for this raffle.",
+                        });
+                    }
+
+                    return interaction.editReply({
+                        content: "Something went wrong and I couldn't enter the raffle.",
+                    });
+                }
+
+                return interaction.editReply({
+                    content: {
+                        entered: `🎟️ You've entered the raffle and earned ${result.xp}xp!`,
                     }[result.state],
                 });
             }
@@ -450,10 +538,10 @@ client.on("messageCreate", async (message) => {
                               content: message.content,
                           },
                       ],
-            clientTools: {
-                discord_channelSnapshot: channelSnapshot(message),
-                logConsole: logConsole,
-            },
+            // clientTools: {
+            //     discord_channelSnapshot: channelSnapshot(message),
+            //     logConsole: logConsole,
+            // },
             runtimeContext,
             experimental_output: z
                 .object({

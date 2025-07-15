@@ -53,7 +53,6 @@ export async function enterRaffle(input: { user: string; raffle: string; amount:
                 raffle: input.raffle,
                 user: input.user,
                 amount: input.amount,
-                timestamp: now,
             })
             .returning({
                 id: raffleEntries.id,
@@ -62,7 +61,6 @@ export async function enterRaffle(input: { user: string; raffle: string; amount:
         await tx.insert(xp).values({
             user: input.user,
             amount: earnedXP,
-            timestamp: now,
             raffleEntry: raffleEntry.id,
             community: raffle.community,
         });
