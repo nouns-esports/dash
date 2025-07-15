@@ -2,6 +2,7 @@ import { db } from "~/packages/db";
 import { passes, questCompletions, quests, users, xp } from "~/packages/db/schema/public";
 import { eq, sql } from "drizzle-orm";
 import { getAction } from "~/packages/server/platforms";
+import { CustomError } from "~/packages/server/utils/tryCatch";
 
 export async function checkQuest(input: { user: string; quest: string }) {
     const user = await db.primary.query.users.findFirst({
@@ -17,7 +18,7 @@ export async function checkQuest(input: { user: string; quest: string }) {
     });
 
     if (!user) {
-        throw new Error("User not found");
+        throw new CustomError({ name: "USER_NOT_FOUND", message: "User not found" });
     }
 
     const quest = await db.primary.query.quests.findFirst({
@@ -38,7 +39,7 @@ export async function checkQuest(input: { user: string; quest: string }) {
     });
 
     if (!quest) {
-        throw new Error("Quest not found");
+        throw new CustomError({ name: "QUEST_NOT_FOUND", message: "Quest not found" });
     }
 
     if (quest.completions?.length > 0) {
@@ -48,17 +49,17 @@ export async function checkQuest(input: { user: string; quest: string }) {
     }
 
     if (!quest.active) {
-        throw new Error("Quest is not active");
+        throw new CustomError({ name: "QUEST_NOT_ACTIVE", message: "Quest is not active" });
     }
 
     const now = new Date();
 
     if (quest.deprecated_start && new Date(quest.deprecated_start) > now) {
-        throw new Error("Quest hasn't started yet");
+        throw new CustomError({ name: "QUEST_NOT_STARTED", message: "Quest hasn't started yet" });
     }
 
     if (quest.deprecated_end && new Date(quest.deprecated_end) < now) {
-        throw new Error("Quest has closed");
+        throw new CustomError({ name: "QUEST_CLOSED", message: "Quest has closed" });
     }
 
     const actions = await Promise.all(
@@ -69,9 +70,10 @@ export async function checkQuest(input: { user: string; quest: string }) {
             });
 
             if (!action) {
-                throw new Error(
-                    `Action ${actionState.action} not found ${actionState.platform ? `for platform ${actionState.platform}` : ""}`,
-                );
+                throw new CustomError({
+                    name: "ACTION_NOT_FOUND",
+                    message: `Action ${actionState.action} not found ${actionState.platform ? `for platform ${actionState.platform}` : ""}`,
+                });
             }
 
             return {

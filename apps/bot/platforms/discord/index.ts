@@ -47,6 +47,7 @@ import { getProposals } from "~/packages/server/platforms/dash/tools/getProposal
 import { ProposalEmbed } from "./embeds/proposal";
 import { placePrediction } from "~/packages/server/mutations/placePrediction";
 import { enterRaffle } from "~/packages/server/mutations/enterRaffle";
+import { tryCatch } from "~/packages/server/utils/tryCatch";
 
 // import { createCommunity } from "~/packages/server/mutations/createCommunity";
 // import { getCommunity } from "~/packages/server/queries/getCommunity";
@@ -189,10 +190,36 @@ client.on("interactionCreate", async (interaction) => {
             const action = interaction.customId.split(":")[2];
 
             if (action === "check") {
-                const result = await checkQuest({
-                    user: user.id,
-                    quest: id,
-                });
+                const [result, error] = await tryCatch(
+                    checkQuest({
+                        user: user.id,
+                        quest: id,
+                    }),
+                );
+
+                if (error) {
+                    if (error.name === "QUEST_NOT_ACTIVE") {
+                        return interaction.editReply({
+                            content: "The quest is not active.",
+                        });
+                    }
+
+                    if (error.name === "QUEST_NOT_STARTED") {
+                        return interaction.editReply({
+                            content: "The quest hasn't started yet.",
+                        });
+                    }
+
+                    if (error.name === "QUEST_CLOSED") {
+                        return interaction.editReply({
+                            content: "The quest has closed.",
+                        });
+                    }
+
+                    return interaction.editReply({
+                        content: "Something went wrong and I couldn't check the quest.",
+                    });
+                }
 
                 return interaction.editReply({
                     content: {
