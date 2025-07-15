@@ -23,8 +23,26 @@ export const getRounds = createTool({
             start: z.date().describe("The round start date"),
             votingStart: z.date().describe("The round voting start date"),
             end: z.date().describe("The round end date"),
-            userVotes: z.array(z.object({})),
-            userProposals: z.array(z.object({})),
+            userVotes: z.array(
+                z.object({
+                    id: z.string().describe("The id of the vote"),
+                    vote: z.number().describe("The vote count"),
+                    proposal: z.object({
+                        id: z.string().describe("The id of the proposal"),
+                        title: z.string().describe("The title of the proposal"),
+                        user: z.object({
+                            id: z.string().describe("The id of the user"),
+                            name: z.string().describe("The name of the user"),
+                        }),
+                    }),
+                }),
+            ),
+            userProposals: z.array(
+                z.object({
+                    id: z.string().describe("The id of the proposal"),
+                    title: z.string().describe("The title of the proposal"),
+                }),
+            ),
         }),
     ),
     execute: async ({ context, runtimeContext }) => {
@@ -60,12 +78,43 @@ export const getRounds = createTool({
                 votes: {
                     where: eq(votes.user, user.id),
                     with: {
+                        proposal: {
+                            columns: {
+                                id: true,
+                                title: true,
+                            },
+                            with: {
+                                user: {
+                                    columns: {
+                                        id: true,
+                                        name: true,
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    columns: {
+                        id: true,
+                        count: true,
                         proposal: true,
                     },
                 },
                 proposals: {
                     where: eq(proposals.user, user.id),
+                    columns: {
+                        id: true,
+                        title: true,
+                    },
                 },
+            },
+            columns: {
+                id: true,
+                name: true,
+                description: true,
+                image: true,
+                start: true,
+                votingStart: true,
+                end: true,
             },
         });
 
@@ -80,12 +129,18 @@ export const getRounds = createTool({
             userVotes: round.votes.map((vote) => ({
                 id: vote.id,
                 vote: vote.count,
-                proposal: vote.proposal,
+                proposal: {
+                    id: vote.proposal.id,
+                    title: vote.proposal.title,
+                    user: {
+                        id: vote.proposal.user.id,
+                        name: vote.proposal.user.name,
+                    },
+                },
             })),
             userProposals: round.proposals.map((proposal) => ({
                 id: proposal.id,
                 title: proposal.title,
-                content: proposal.content,
             })),
         }));
     },

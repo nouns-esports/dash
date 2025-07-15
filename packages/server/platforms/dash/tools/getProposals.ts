@@ -72,6 +72,14 @@ export const getProposals = createTool({
             orderBy: roundEmbedding
                 ? cosineDistance(rounds.embedding, roundEmbedding.embedding)
                 : undefined,
+            columns: {
+                id: true,
+                name: true,
+                image: true,
+                start: true,
+                votingStart: true,
+                end: true,
+            },
             with: {
                 proposals: {
                     // where: proposalSearchEmbedding
@@ -85,7 +93,18 @@ export const getProposals = createTool({
                         votes: {
                             where: eq(votes.user, user.id),
                         },
-                        user: true,
+                        user: {
+                            columns: {
+                                name: true,
+                                image: true,
+                            },
+                        },
+                    },
+                    columns: {
+                        id: true,
+                        title: true,
+                        image: true,
+                        content: true,
                     },
                 },
             },

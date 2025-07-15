@@ -69,6 +69,14 @@ export const getRaffles = createTool({
                     where: eq(raffleEntries.user, user.id),
                 },
             },
+            columns: {
+                id: true,
+                name: true,
+                description: true,
+                images: true,
+                gold: true,
+                winners: true,
+            },
             limit: context.limit ?? 3,
             extras: {
                 totalEntries:

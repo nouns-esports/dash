@@ -23,6 +23,8 @@ export const getEvents = createTool({
             image: z.string().describe("The image of the event"),
             attendeeCount: z.number().nullable().describe("The number of attendees for the event"),
             registered: z.boolean().describe("Whether the user is registered for the event"),
+            start: z.string().datetime().describe("The start date of the event"),
+            end: z.string().datetime().describe("The end date of the event"),
         }),
     ),
     execute: async ({ context, runtimeContext }) => {
@@ -61,6 +63,15 @@ export const getEvents = createTool({
                     limit: 1,
                 },
             },
+            columns: {
+                id: true,
+                name: true,
+                description: true,
+                image: true,
+                start: true,
+                end: true,
+                attendeeCount: true,
+            },
         });
 
         return fetchedEvents.map((event) => ({
@@ -70,6 +81,8 @@ export const getEvents = createTool({
             image: event.image,
             attendeeCount: event.attendeeCount,
             registered: event.attendees.length > 0,
+            start: event.start.toISOString(),
+            end: event.end.toISOString(),
         }));
     },
 });

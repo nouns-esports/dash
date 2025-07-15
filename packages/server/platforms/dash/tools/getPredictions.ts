@@ -78,6 +78,12 @@ export const getPredictions = createTool({
                 : desc(predictions.start),
             with: {
                 outcomes: {
+                    columns: {
+                        id: true,
+                        name: true,
+                        pool: true,
+                        result: true,
+                    },
                     with: {
                         bets: {
                             where: eq(bets.user, user.id),
@@ -85,6 +91,16 @@ export const getPredictions = createTool({
                         },
                     },
                 },
+            },
+            columns: {
+                id: true,
+                name: true,
+                rules: true,
+                image: true,
+                xp: true,
+                pool: true,
+                closed: true,
+                resolved: true,
             },
             limit: context.limit ?? 3,
         });

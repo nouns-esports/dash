@@ -1,6 +1,7 @@
 import { db } from "~/packages/db";
 import { eq, sql } from "drizzle-orm";
 import { passes, points, raffleEntries, xp } from "~/packages/db/schema/public";
+import { CustomError } from "~/packages/server/utils/tryCatch";
 
 export async function enterRaffle(input: { user: string; raffle: string; amount: number }) {
     const raffle = await db.primary.query.raffles.findFirst({
@@ -14,24 +15,30 @@ export async function enterRaffle(input: { user: string; raffle: string; amount:
     });
 
     if (!raffle) {
-        throw new Error("Raffle not found");
+        throw new CustomError({ name: "RAFFLE_NOT_FOUND", message: "Raffle not found" });
     }
 
     const now = new Date();
 
     if (now < new Date(raffle.start)) {
-        throw new Error("Raffle has not started yet");
+        throw new CustomError({
+            name: "RAFFLE_NOT_STARTED",
+            message: "Raffle has not started yet",
+        });
     }
 
     if (now > new Date(raffle.end)) {
-        throw new Error("Raffle has ended");
+        throw new CustomError({ name: "RAFFLE_ENDED", message: "Raffle has ended" });
     }
 
     if (raffle.limit) {
         const userEntries = raffle.entries.reduce((acc, curr) => acc + curr.amount, 0);
 
         if (userEntries + input.amount > raffle.limit) {
-            throw new Error("You have reached the maximum number of entries for this raffle");
+            throw new CustomError({
+                name: "RAFFLE_ENTRY_LIMIT_REACHED",
+                message: "You have reached the maximum number of entries for this raffle",
+            });
         }
     }
 

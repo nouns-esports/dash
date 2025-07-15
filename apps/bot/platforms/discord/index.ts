@@ -268,7 +268,7 @@ client.on("interactionCreate", async (interaction) => {
 
             if (action === "predict") {
                 return interaction.editReply({
-                    content: "Choose an outcome for your prediction",
+                    content: "Choose an outcome for this prediction",
                     components: [
                         Row([
                             Select({
@@ -318,14 +318,25 @@ client.on("interactionCreate", async (interaction) => {
                     });
                 }
 
-                await placePrediction({
-                    prediction: prediction.id,
-                    outcome: outcome.id,
-                    user: user.id,
-                });
+                const [result, error] = await tryCatch(
+                    placePrediction({
+                        prediction: prediction.id,
+                        outcome: outcome.id,
+                        user: user.id,
+                    }),
+                );
+
+                if (error) {
+                    return interaction.editReply({
+                        content: "Something went wrong and I couldn't place your prediction.",
+                    });
+                }
 
                 return interaction.editReply({
-                    content: `Aknowledged your prediction for ${outcome.name}`,
+                    content: {
+                        "already-placed": "You've already placed this prediction.",
+                        placed: `🔮 Prediction placed for ${outcome.name}`,
+                    }[result.state],
                 });
             }
         }

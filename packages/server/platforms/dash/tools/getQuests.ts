@@ -32,6 +32,7 @@ export const getQuests = createTool({
             xp: z.number().describe("The amount of xp awarded for completing the quest"),
             points: z.number().describe("The amount of points awarded for completing the quest"),
             pointsLabel: z.string().describe("The community's points name"),
+            completed: z.boolean().describe("Whether the quest was completed by the user"),
         }),
     ),
     execute: async ({ context, runtimeContext }) => {
@@ -74,6 +75,14 @@ export const getQuests = createTool({
                 completions: {
                     where: eq(questCompletions.user, user.id),
                 },
+            },
+            columns: {
+                id: true,
+                name: true,
+                description: true,
+                image: true,
+                xp: true,
+                points: true,
             },
             limit: context.limit ?? 3,
         });
