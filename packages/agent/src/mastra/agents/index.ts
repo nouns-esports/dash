@@ -77,7 +77,7 @@ export const dash = new Agent({
           COMMUNITY CONTEXT:
           ${platform ? `You are responding to a message on the ${platform} platform.` : ""}
           ${community ? `The relevant community is ${community.name}.` : ""}
-          The community's points system is called ${community?.points?.name ?? "Points"}. ${!community?.points?.name || community.points.name.toLowerCase() === "points" ? "" : `When the user mentions the term "${community.points.name}" they are referring to "points" in the context of executing tools, fetching balances, etc.`}
+          The community's points system is called "${community?.points?.name ?? "points"}". ${!community?.points?.name || community.points.name.toLowerCase() === "points" ? "" : `When the user mentions the term "${community.points.name}" they are referring to "points" in the context of executing tools, fetching balances, etc.`}
 
           USER CONTEXT:
           ${user ? `The user you are talking to is ${user.name}.` : ""}
