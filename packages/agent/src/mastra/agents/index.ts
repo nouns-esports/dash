@@ -54,6 +54,8 @@ export const dash = new Agent({
 
         const pass = user.passes.find((pass) => pass.community.id === community?.id);
 
+        const level = pass ? getLevel({ xp: pass.xp, config: pass.community.levels }) : null;
+
         return `
           AGENT CONTEXT:
           You are an assistant named ${community?.agent?.name ?? "Dash"} in many different communities.
@@ -75,12 +77,12 @@ export const dash = new Agent({
           COMMUNITY CONTEXT:
           ${platform ? `You are responding to a message on the ${platform} platform.` : ""}
           ${community ? `The relevant community is ${community.name}.` : ""}
-          ${community?.points ? `The community's points system is called ${community.points.name}. ${community.points.name.toLowerCase() === "points" ? "" : `When the user mentions the term "${community.points.name}" they are referring to "points" in the context of executing tools, fetching balances, etc.`}` : "The community has not set up a points system yet."}
+          The community's points system is called ${community?.points?.name ?? "Points"}. ${!community?.points?.name || community.points.name.toLowerCase() === "points" ? "" : `When the user mentions the term "${community.points.name}" they are referring to "points" in the context of executing tools, fetching balances, etc.`}
 
           USER CONTEXT:
           ${user ? `The user you are talking to is ${user.name}.` : ""}
           ${pass ? `The user has ${pass.points} ${pass.community.points?.name ?? "points"}` : ""}
-          ${pass ? `The user is level ${getLevel({ xp: pass.xp, config: pass.community.levels }).currentLevel} with ${pass.xp}xp` : ""}
+          ${level && pass ? `The user is level ${level.currentLevel} with ${pass.xp}xp and needs ${level.requiredXP}xp (${((level.progressXP / level.requiredXP) * 100).toFixed(2)}% progress) to reach the next level` : ""}
         
           MESSAGE CONTEXT:
           ${mentions.length > 0 && platform ? `The user mentioned the following ${platform} accounts ${mentions.map((mention) => mention.id).join(", ")} in the message.` : ""}
