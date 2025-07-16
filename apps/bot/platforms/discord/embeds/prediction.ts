@@ -22,7 +22,6 @@ export function PredictionEmbed(props: {
                 Button({
                     label: "Predict",
                     type: "primary",
-                    disabled: true,
                     customId: `prediction:${props.prediction.id}:predict`,
                 }),
                 Button({
