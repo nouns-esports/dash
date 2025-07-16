@@ -3,12 +3,16 @@ import { z } from "zod";
 import { getProducts } from "~/packages/server/platforms/dash/tools/getProducts";
 import { Row } from "../components/row";
 import { Button } from "../components/button";
+import { optimizeImage } from "~/packages/server/utils/optimizeImage";
 
 export function ProductEmbed(props: { product: z.infer<typeof getProducts.outputSchema>[number] }) {
     return {
         embed: Embed({
             title: props.product.name,
-            image: props.product.image,
+            image: optimizeImage(props.product.image, {
+                width: 1200,
+                height: 675,
+            }),
             url: `https://nouns.gg/products/${props.product.id}`,
             color: "#4A5EEB",
             footer: {

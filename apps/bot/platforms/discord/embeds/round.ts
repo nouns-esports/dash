@@ -3,6 +3,7 @@ import { getRounds } from "~/packages/server/platforms/dash/tools/getRounds";
 import { z } from "zod";
 import { Button } from "../components/button";
 import { Row } from "../components/row";
+import { optimizeImage } from "~/packages/server/utils/optimizeImage";
 
 export function RoundEmbed(props: {
     round: z.infer<typeof getRounds.outputSchema>[number];
@@ -16,7 +17,10 @@ export function RoundEmbed(props: {
     return {
         embed: Embed({
             title: props.round.name,
-            image: props.round.image,
+            image: optimizeImage(props.round.image, {
+                width: 1200,
+                height: 675,
+            }),
             url: `https://nouns.gg/rounds/${props.round.id}`,
             color: "#4A5EEB",
         }),

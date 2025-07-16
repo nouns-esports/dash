@@ -3,6 +3,7 @@ import { getQuests } from "~/packages/server/platforms/dash/tools/getQuests";
 import { z } from "zod";
 import { Row } from "../components/row";
 import { Button } from "../components/button";
+import { optimizeImage } from "~/packages/server/utils/optimizeImage";
 
 export function QuestEmbed(props: {
     quest: z.infer<typeof getQuests.outputSchema>[number];
@@ -10,7 +11,11 @@ export function QuestEmbed(props: {
     return {
         embed: Embed({
             title: props.quest.name,
-            image: `${props.quest.image}?img-width=1200&img-height=800&img-fit=cover&img-onerror=redirect`,
+            image: optimizeImage(props.quest.image, {
+                width: 1200,
+                height: 800,
+                fit: "cover",
+            }),
             url: `https://nouns.gg/quests/${props.quest.id}`,
             color: "#4A5EEB",
             footer: {

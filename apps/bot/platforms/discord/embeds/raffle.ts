@@ -3,6 +3,7 @@ import { getRaffles } from "~/packages/server/platforms/dash/tools/getRaffles";
 import { z } from "zod";
 import { Row } from "../components/row";
 import { Button } from "../components/button";
+import { optimizeImage } from "~/packages/server/utils/optimizeImage";
 
 export function RaffleEmbed(props: {
     raffle: z.infer<typeof getRaffles.outputSchema>[number];
@@ -10,7 +11,11 @@ export function RaffleEmbed(props: {
     return {
         embed: Embed({
             title: props.raffle.name,
-            image: `${props.raffle.image}?img-width=1200&img-height=800&img-fit=cover&img-onerror=redirect`,
+            image: optimizeImage(props.raffle.image, {
+                width: 1200,
+                height: 800,
+                fit: "cover",
+            }),
             url: `https://nouns.gg/raffles/${props.raffle.id}`,
             color: "#4A5EEB",
             footer: {

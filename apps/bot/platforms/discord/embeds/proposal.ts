@@ -3,6 +3,7 @@ import { getProposals } from "~/packages/server/platforms/dash/tools/getProposal
 import { z } from "zod";
 import { Button } from "../components/button";
 import { Row } from "../components/row";
+import { optimizeImage } from "~/packages/server/utils/optimizeImage";
 
 export function ProposalEmbed(props: {
     proposal: z.infer<typeof getProposals.outputSchema>[number];
@@ -10,7 +11,10 @@ export function ProposalEmbed(props: {
     return {
         embed: Embed({
             title: props.proposal.title,
-            image: props.proposal.image ?? props.proposal.round.image,
+            image: optimizeImage(props.proposal.image ?? props.proposal.round.image, {
+                width: 1200,
+                height: 675,
+            }),
             url: `https://nouns.gg/rounds/${props.proposal.round.id}?proposal=${props.proposal.id}`,
             color: "#4A5EEB",
             footer: {
