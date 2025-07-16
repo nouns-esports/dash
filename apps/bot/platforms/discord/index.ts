@@ -181,7 +181,7 @@ client.on("interactionCreate", async (interaction) => {
         });
     }
 
-    const pass = user.passes.find((pass) => pass.community === community.id);
+    const pass = user.passes.find((pass) => pass.community.id === community.id);
 
     if (interaction.isButton()) {
         const type = interaction.customId.split(":")[0];
@@ -385,9 +385,6 @@ client.on("interactionCreate", async (interaction) => {
                 }
 
                 if (!pass || amount * raffle.gold > pass.points) {
-                    console.log("pass", pass);
-                    console.log("amount", amount);
-                    console.log("raffle.gold", raffle.gold);
                     return interaction.editReply({
                         content: "You don't have enough points.",
                     });
@@ -422,7 +419,7 @@ client.on("interactionCreate", async (interaction) => {
                     }
 
                     return interaction.editReply({
-                        content: "Something went wrong and I couldn't enter the raffle.",
+                        content: "Something went wrong and I couldn't enter the raffle for you.",
                     });
                 }
 
