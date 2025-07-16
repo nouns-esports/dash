@@ -186,9 +186,9 @@ client.on("interactionCreate", async (interaction) => {
     if (interaction.isButton()) {
         const type = interaction.customId.split(":")[0];
 
-        await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
-
         if (type === "quest") {
+            await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
+
             const id = interaction.customId.split(":")[1];
             const action = interaction.customId.split(":")[2];
 
@@ -258,6 +258,8 @@ client.on("interactionCreate", async (interaction) => {
         }
 
         if (type === "prediction") {
+            await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
+
             const id = interaction.customId.split(":")[1];
             const action = interaction.customId.split(":")[2];
 
@@ -294,9 +296,9 @@ client.on("interactionCreate", async (interaction) => {
     } else if (interaction.isStringSelectMenu()) {
         const type = interaction.customId.split(":")[0];
 
-        await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
-
         if (type === "prediction") {
+            await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
+
             const id = interaction.customId.split(":")[1];
             const action = interaction.customId.split(":")[2];
 
@@ -349,9 +351,9 @@ client.on("interactionCreate", async (interaction) => {
     } else if (interaction.isModalSubmit()) {
         const type = interaction.customId.split(":")[0];
 
-        await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
-
         if (type === "raffle") {
+            await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
+
             const id = interaction.customId.split(":")[1];
             const action = interaction.customId.split(":")[2];
 
