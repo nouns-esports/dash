@@ -242,11 +242,11 @@ client.on("interactionCreate", async (interaction) => {
             if (action === "enter") {
                 await interaction.showModal(
                     Modal({
-                        customId: `raffle:${id}:enter:select-amount`,
+                        customId: `raffle:${id}:select-amount`,
                         title: "Enter Raffle",
                         inputs: [
                             Input({
-                                customId: `raffle:${id}:enter:select-amount:value`,
+                                customId: `raffle:${id}:select-amount:value`,
                                 label: "Amount",
                                 placeholder: "1",
                                 style: "short",
@@ -369,7 +369,7 @@ client.on("interactionCreate", async (interaction) => {
 
             if (action === "select-amount") {
                 const amount = parseInt(
-                    interaction.fields.getTextInputValue(`raffle:${id}:enter:select-amount:value`),
+                    interaction.fields.getTextInputValue(`raffle:${id}:select-amount:value`),
                 );
 
                 if (Number.isNaN(amount)) {
