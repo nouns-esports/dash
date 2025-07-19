@@ -1,5 +1,5 @@
 import { db } from "~/packages/db";
-import { communities, communityConnections } from "~/packages/db/schema/public";
+import { communities, communityPlugins } from "~/packages/db/schema/public";
 import { sql } from "drizzle-orm";
 
 export async function getCommunityFromServer(input: { server: string }) {
@@ -7,8 +7,8 @@ export async function getCommunityFromServer(input: { server: string }) {
         where: sql`
             ${communities.id} = (
                 SELECT cp.community
-                FROM ${communityConnections} AS cp
-                WHERE cp.platform = 'discord'
+                FROM ${communityPlugins} AS cp
+                WHERE cp.type = 'discord'
                 AND EXISTS (
                     SELECT 1
                     FROM jsonb_array_elements(cp.config->'servers') AS item
@@ -18,7 +18,7 @@ export async function getCommunityFromServer(input: { server: string }) {
         `,
         with: {
             admins: true,
-            connections: true,
+            plugins: true,
         },
     });
 }

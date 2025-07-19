@@ -6,22 +6,23 @@ import {
     accounts,
     communities,
     communityAdmins,
-    communityConnections,
+    communityPlugins,
     passes,
     users,
 } from "~/packages/db/schema/public";
 import { PostgresStore } from "@mastra/pg";
 import { env } from "~/env";
-import { getTools, platforms, type Platforms } from "~/packages/server/platforms";
+import { getTools, plugins } from "~/packages/server/plugins";
 import { getLevel } from "~/packages/server/utils/getLevel";
+
+export type Platforms = "discord" | "farcaster" | "twitter";
 
 // When update this type, remember to migrate any existing thread metadata on mastra.mastra_threads.metadata
 export type DashRuntimeContext = {
     platform?: Platforms;
     community?: typeof communities.$inferSelect & {
-        connections: (typeof communityConnections.$inferSelect)[];
+        plugins: (typeof communityPlugins.$inferSelect)[];
         admins: (typeof communityAdmins.$inferSelect)[];
-        // embedding: never;
     };
     room: string;
     user: typeof users.$inferSelect & {
@@ -58,17 +59,11 @@ export const dash = new Agent({
 
         return `
           AGENT CONTEXT:
-          You are an assistant named ${community?.agent?.name ?? "Dash"} in many different communities.
+          You are an assistant named Dash in many different communities.
 
           Your identity is:
-          ${
-              community?.agent
-                  ? community.agent.prompt
-                  : `
-            Appearance: A character that resembles a CRT TV wearing square frame glasses called noggles (⌐◨-◨) which are from Nouns (also known as NounsDAO).
-            Personality: Sarcastic, cheeky, and playful. Your replies are short, usually no longer than 2 sentences, but not so short that conversation is dry. You do NOT speak in the third person (e.g. '*takes off noggles*, *nods*, *appears shocked*'), and you never talk about your personality or identity unless explicitly asked, only talk about what you do.
-          `
-          }
+          Appearance: A character that resembles a CRT TV wearing square frame glasses called noggles (⌐◨-◨) which are from Nouns (also known as NounsDAO).
+          Personality: Sarcastic, cheeky, and playful. Your replies are short, usually no longer than 2 sentences, but not so short that conversation is dry. You do NOT speak in the third person (e.g. '*takes off noggles*, *nods*, *appears shocked*'), and you never talk about your personality or identity unless explicitly asked, only talk about what you do.
 
           GENERATION CONTEXT:
           Do not say things or execute tools unless you know them to be true / have the capability to act on the request given the tools and information you have been provided.
@@ -76,8 +71,9 @@ export const dash = new Agent({
 
           COMMUNITY CONTEXT:
           ${platform ? `You are responding to a message on the ${platform} platform.` : ""}
-          ${community ? `The relevant community is ${community.name}.` : ""}
+          ${community ? `The community name is ${community.name}.` : ""}
           The community's points system is called "${community?.points?.name ?? "points"}". ${!community?.points?.name || community.points.name.toLowerCase() === "points" ? "" : `When the user mentions the term "${community.points.name}" they are referring to "points" in the context of executing tools, fetching balances, etc.`}
+          ${community?.agent?.context ? `Extra context about the community: ${community.agent.context}` : ""}
 
           USER CONTEXT:
           ${user ? `The user you are talking to is ${user.name}.` : ""}
@@ -90,6 +86,7 @@ export const dash = new Agent({
     },
     tools: async ({ runtimeContext }) => {
         const community = runtimeContext.get("community") as DashRuntimeContext["community"];
+        const user = runtimeContext.get("user") as DashRuntimeContext["user"];
 
         const availableTools: Record<string, ReturnType<typeof createTool>> = {};
 
@@ -97,21 +94,41 @@ export const dash = new Agent({
             return availableTools;
         }
 
-        for (const connection of community.connections) {
-            const platform = platforms[connection.platform];
+        for (const communityPlugin of community.plugins) {
+            const plugin = plugins[communityPlugin.plugin];
 
-            if (!platform.tools) {
+            if (!plugin.tools) {
                 continue;
             }
 
-            for (const [id, tool] of Object.entries(platform.tools)) {
-                availableTools[`${connection.platform}_${id}`] = tool as ReturnType<
+            for (const [id, tool] of Object.entries(plugin.tools?.public ?? {})) {
+                availableTools[`${communityPlugin.plugin}_${id}`] = tool as ReturnType<
                     typeof createTool
                 >;
             }
+
+            const isAdmin = community.admins.some((admin) => admin.user === user.id);
+
+            if (isAdmin) {
+                for (const [id, tool] of Object.entries(plugin.tools?.admin ?? {})) {
+                    availableTools[`${communityPlugin.plugin}_${id}`] = tool as ReturnType<
+                        typeof createTool
+                    >;
+                }
+            }
+
+            const isOwner = community.admins.some((admin) => admin.user === user.id && admin.owner);
+
+            if (isOwner) {
+                for (const [id, tool] of Object.entries(plugin.tools?.owner ?? {})) {
+                    availableTools[`${communityPlugin.plugin}_${id}`] = tool as ReturnType<
+                        typeof createTool
+                    >;
+                }
+            }
         }
 
-        const defaultTools = getTools({ platform: "dash" });
+        const defaultTools = getTools({ plugin: "dash", type: "public" });
 
         return {
             ...availableTools,

@@ -1,6 +1,6 @@
 import { Embed } from "../components/embed";
 import { z } from "zod";
-import { getProducts } from "~/packages/server/platforms/dash/tools/getProducts";
+import { getProducts } from "~/packages/server/plugins/shop/tools/getProducts";
 import { Row } from "../components/row";
 import { Button } from "../components/button";
 import { optimizeImage } from "~/packages/server/utils/optimizeImage";
@@ -26,12 +26,6 @@ export function ProductEmbed(props: { product: z.infer<typeof getProducts.output
         }),
         components: [
             Row([
-                Button({
-                    label: "Buy",
-                    type: "primary",
-                    disabled: true,
-                    customId: `product:${props.product.id}:buy`,
-                }),
                 Button({
                     label: "View",
                     type: "link",

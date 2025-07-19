@@ -1,7 +1,7 @@
 import { db } from "~/packages/db";
 import { users, accounts, passes, communities } from "~/packages/db/schema/public";
 import { sql } from "drizzle-orm";
-import type { Platforms } from "~/packages/server/platforms";
+import type { Platforms } from "~/packages/agent/src/mastra/agents";
 
 export type User = typeof users.$inferSelect & {
     accounts: (typeof accounts.$inferSelect)[];

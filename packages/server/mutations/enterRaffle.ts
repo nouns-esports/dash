@@ -45,7 +45,7 @@ export async function enterRaffle(input: { user: string; raffle: string; amount:
     const earnedXP = 10 * input.amount;
 
     await db.primary.transaction(async (tx) => {
-        const cost = raffle.gold * input.amount;
+        const cost = raffle.cost * input.amount;
 
         const [raffleEntry] = await tx
             .insert(raffleEntries)
@@ -61,6 +61,7 @@ export async function enterRaffle(input: { user: string; raffle: string; amount:
         await tx.insert(xp).values({
             user: input.user,
             amount: earnedXP,
+            raffle: input.raffle,
             raffleEntry: raffleEntry.id,
             community: raffle.community,
         });
@@ -84,6 +85,7 @@ export async function enterRaffle(input: { user: string; raffle: string; amount:
             from: input.user,
             to: null,
             amount: cost,
+            raffle: input.raffle,
             raffleEntry: raffleEntry.id,
             community: raffle.community,
         });

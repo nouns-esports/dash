@@ -1,7 +1,6 @@
 import { Mastra } from "@mastra/core";
 import { dash, type DashRuntimeContext } from "./agents";
 import { env } from "../../../../env";
-import { platforms } from "~/packages/server/platforms";
 import type { RuntimeContext } from "@mastra/core/runtime-context";
 import { PinoLogger } from "@mastra/loggers";
 
@@ -55,11 +54,12 @@ export const mastra = new Mastra({
                         deprecated_parentUrl: null,
                         deprecated_details: null,
                         deprecated_featured: false,
-                        connections: [],
+                        plugins: [],
                         admins: [],
                         levels: null,
                         points: null,
                         embedding: null,
+                        createdAt: new Date(),
                     } satisfies DashRuntimeContext["community"]);
 
                     runtimeContext.set("platform", "discord");
@@ -73,7 +73,6 @@ export const mastra = new Mastra({
                         deprecated_twitter: null,
                         deprecated_discord: null,
                         deprecated_fid: null,
-                        admin: true,
                         accounts: [],
                         passes: [],
                     } satisfies DashRuntimeContext["user"]);
@@ -82,11 +81,7 @@ export const mastra = new Mastra({
                     runtimeContext.set("mentions", []);
                 }
 
-                if (
-                    !runtimeContext.get("platform") ||
-                    !Object.keys(platforms).includes(runtimeContext.get("platform")) ||
-                    !runtimeContext.get("user")
-                ) {
+                if (!runtimeContext.get("platform") || !runtimeContext.get("user")) {
                     return new Response("Bad Request", { status: 400 });
                 }
 

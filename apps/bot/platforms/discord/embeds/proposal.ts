@@ -1,5 +1,5 @@
 import { Embed } from "../components/embed";
-import { getProposals } from "~/packages/server/platforms/dash/tools/getProposals";
+import { getProposals } from "~/packages/server/plugins/rounds/tools/getProposals";
 import { z } from "zod";
 import { Button } from "../components/button";
 import { Row } from "../components/row";

@@ -6,7 +6,7 @@ import {
     bets,
     communities,
     communityAdmins,
-    communityConnections,
+    communityPlugins,
     escrows,
     outcomes,
     passes,
@@ -39,7 +39,7 @@ export const communityRelations = relations(communities, ({ many }) => ({
     quests: many(quests),
     admins: many(communityAdmins),
     predictions: many(predictions),
-    connections: many(communityConnections),
+    plugins: many(communityPlugins),
     raffles: many(raffles),
 }));
 
@@ -55,9 +55,9 @@ export const communityAdminRelations = relations(communityAdmins, ({ one, many }
     wallets: many(wallets),
 }));
 
-export const communityConnectionRelations = relations(communityConnections, ({ one }) => ({
+export const communityPluginRelations = relations(communityPlugins, ({ one }) => ({
     community: one(communities, {
-        fields: [communityConnections.community],
+        fields: [communityPlugins.community],
         references: [communities.id],
     }),
 }));

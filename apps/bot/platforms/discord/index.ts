@@ -23,10 +23,10 @@ import { Select } from "./components/select";
 import type { Embed } from "./components/embed";
 import { QuestEmbed } from "./embeds/quest";
 import { PredictionEmbed } from "./embeds/prediction";
-import { getQuests } from "~/packages/server/platforms/dash/tools/getQuests";
-import { getPredictions } from "~/packages/server/platforms/dash/tools/getPredictions";
+import { getQuests } from "~/packages/server/plugins/quests/tools/getQuests";
+import { getPredictions } from "~/packages/server/plugins/predictions/tools/getPredictions";
 import { Input, Modal } from "./components/modal";
-import { getEvents } from "~/packages/server/platforms/dash/tools/getEvents";
+import { getEvents } from "~/packages/server/plugins/events/tools/getEvents";
 import { EventEmbed } from "./embeds/event";
 import { createTool } from "@mastra/core";
 import { db } from "~/packages/db";
@@ -34,16 +34,16 @@ import { passes, points, xp } from "~/packages/db/schema/public";
 import { sql } from "drizzle-orm";
 import { getPrediction } from "~/packages/server/queries/getPrediction";
 import { channelSnapshot } from "./tools/channelSnapshot";
-import { getRaffles } from "~/packages/server/platforms/dash/tools/getRaffles";
-import { getRounds } from "~/packages/server/platforms/dash/tools/getRounds";
-import { getProducts } from "~/packages/server/platforms/dash/tools/getProducts";
+import { getRaffles } from "~/packages/server/plugins/raffles/tools/getRaffles";
+import { getRounds } from "~/packages/server/plugins/rounds/tools/getRounds";
+import { getProducts } from "~/packages/server/plugins/shop/tools/getProducts";
 import { RaffleEmbed } from "./embeds/raffle";
 import { RoundEmbed } from "./embeds/round";
 import { ProductEmbed } from "./embeds/product";
 import type { Community } from "~/packages/server/mutations/createCommunity";
 import { checkQuest } from "~/packages/server/mutations/checkQuest";
 import { logConsole } from "./tools/logConsole";
-import { getProposals } from "~/packages/server/platforms/dash/tools/getProposals";
+import { getProposals } from "~/packages/server/plugins/rounds/tools/getProposals";
 import { ProposalEmbed } from "./embeds/proposal";
 import { placePrediction } from "~/packages/server/mutations/placePrediction";
 import { enterRaffle } from "~/packages/server/mutations/enterRaffle";
@@ -186,9 +186,9 @@ client.on("interactionCreate", async (interaction) => {
     if (interaction.isButton()) {
         const type = interaction.customId.split(":")[0];
 
-        if (type === "quest") {
-            await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
+        await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
 
+        if (type === "quest") {
             const id = interaction.customId.split(":")[1];
             const action = interaction.customId.split(":")[2];
 
@@ -239,7 +239,18 @@ client.on("interactionCreate", async (interaction) => {
             const id = interaction.customId.split(":")[1];
             const action = interaction.customId.split(":")[2];
 
+            const raffle = await getRaffle({
+                id,
+            });
+
+            if (!raffle) {
+                return interaction.editReply({
+                    content: "Something went wrong and I couldn't find the raffle.",
+                });
+            }
+
             if (action === "enter") {
+                await interaction.deleteReply();
                 await interaction.showModal(
                     Modal({
                         customId: `raffle:${id}:select-amount`,
@@ -248,7 +259,30 @@ client.on("interactionCreate", async (interaction) => {
                             Input({
                                 customId: `raffle:${id}:select-amount:value`,
                                 label: "Amount",
-                                placeholder: "1",
+                                placeholder: raffle.limit ? `Max: ${raffle.limit}` : "Min: 1", // TODO: infer limit from previous entries
+                                style: "short",
+                            }),
+                        ],
+                    }),
+                );
+            }
+        }
+
+        if (type === "proposal") {
+            const id = interaction.customId.split(":")[1];
+            const action = interaction.customId.split(":")[2];
+
+            if (action === "vote") {
+                await interaction.deleteReply();
+                await interaction.showModal(
+                    Modal({
+                        customId: `proposal:${id}:vote`,
+                        title: "Cast Vote",
+                        inputs: [
+                            Input({
+                                customId: `proposal:${id}:vote:value`,
+                                label: "Amount",
+                                placeholder: "Remaining: 1",
                                 style: "short",
                             }),
                         ],
@@ -258,8 +292,6 @@ client.on("interactionCreate", async (interaction) => {
         }
 
         if (type === "prediction") {
-            await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
-
             const id = interaction.customId.split(":")[1];
             const action = interaction.customId.split(":")[2];
 
@@ -296,9 +328,9 @@ client.on("interactionCreate", async (interaction) => {
     } else if (interaction.isStringSelectMenu()) {
         const type = interaction.customId.split(":")[0];
 
-        if (type === "prediction") {
-            await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
+        await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
 
+        if (type === "prediction") {
             const id = interaction.customId.split(":")[1];
             const action = interaction.customId.split(":")[2];
 
@@ -351,9 +383,9 @@ client.on("interactionCreate", async (interaction) => {
     } else if (interaction.isModalSubmit()) {
         const type = interaction.customId.split(":")[0];
 
-        if (type === "raffle") {
-            await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
+        await interaction.deferReply({ flags: [MessageFlags.Ephemeral] });
 
+        if (type === "raffle") {
             const id = interaction.customId.split(":")[1];
             const action = interaction.customId.split(":")[2];
 
@@ -384,7 +416,7 @@ client.on("interactionCreate", async (interaction) => {
                     });
                 }
 
-                if (!pass || amount * raffle.gold > pass.points) {
+                if (!pass || amount * raffle.cost > pass.points) {
                     return interaction.editReply({
                         content: "You don't have enough points.",
                     });
@@ -428,6 +460,17 @@ client.on("interactionCreate", async (interaction) => {
                         entered: `🎟️ You've entered the raffle and earned ${result.xp}xp!`,
                     }[result.state],
                 });
+            }
+        }
+
+        if (type === "proposal") {
+            const id = interaction.customId.split(":")[1];
+            const action = interaction.customId.split(":")[2];
+
+            if (action === "vote") {
+                const amount = parseInt(
+                    interaction.fields.getTextInputValue(`proposal:${id}:vote:value`),
+                );
             }
         }
     }

@@ -7,7 +7,7 @@ export async function getCommunity(input: { id: string }) {
         where: eq(communities.id, input.id),
         with: {
             admins: true,
-            connections: true,
+            plugins: true,
         },
     });
 }

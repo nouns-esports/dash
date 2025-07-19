@@ -1,5 +1,5 @@
 import { Embed } from "../components/embed";
-import { getQuests } from "~/packages/server/platforms/dash/tools/getQuests";
+import { getQuests } from "~/packages/server/plugins/quests/tools/getQuests";
 import { z } from "zod";
 import { Row } from "../components/row";
 import { Button } from "../components/button";

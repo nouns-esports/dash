@@ -28,7 +28,7 @@ export function channelSnapshot(message: Message) {
                     throw new Error("Community is required to take Discord channel snapshots");
                 }
 
-                if (!user.admin || !community.admins.find((admin) => admin.user === user.id)) {
+                if (!community.admins.find((admin) => admin.user === user.id)) {
                     throw new Error("You are not authorized to take xp snapshots");
                 }
 

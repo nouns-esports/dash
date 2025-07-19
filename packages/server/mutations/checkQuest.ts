@@ -1,7 +1,7 @@
 import { db } from "~/packages/db";
 import { passes, questCompletions, quests, users, xp } from "~/packages/db/schema/public";
 import { eq, sql } from "drizzle-orm";
-import { getAction } from "~/packages/server/platforms";
+import { getAction } from "~/packages/server/plugins";
 import { CustomError } from "~/packages/server/utils/tryCatch";
 
 export async function checkQuest(input: { user: string; quest: string }) {
@@ -31,7 +31,7 @@ export async function checkQuest(input: { user: string; quest: string }) {
             actions: true,
             community: {
                 with: {
-                    connections: true,
+                    plugins: true,
                     admins: true,
                 },
             },
@@ -54,11 +54,11 @@ export async function checkQuest(input: { user: string; quest: string }) {
 
     const now = new Date();
 
-    if (quest.deprecated_start && new Date(quest.deprecated_start) > now) {
+    if (quest.start && quest.start > now) {
         throw new CustomError({ name: "QUEST_NOT_STARTED", message: "Quest hasn't started yet" });
     }
 
-    if (quest.deprecated_end && new Date(quest.deprecated_end) < now) {
+    if (quest.end && quest.end < now) {
         throw new CustomError({ name: "QUEST_CLOSED", message: "Quest has closed" });
     }
 
@@ -66,13 +66,13 @@ export async function checkQuest(input: { user: string; quest: string }) {
         quest.actions.map(async (actionState) => {
             const action = getAction({
                 action: actionState.action,
-                platform: actionState.platform ?? "dash",
+                plugin: actionState.plugin ?? "dash",
             });
 
             if (!action) {
                 throw new CustomError({
                     name: "ACTION_NOT_FOUND",
-                    message: `Action ${actionState.action} not found ${actionState.platform ? `for platform ${actionState.platform}` : ""}`,
+                    message: `Action ${actionState.action} not found ${actionState.plugin ? `for plugin ${actionState.plugin}` : ""}`,
                 });
             }
 
