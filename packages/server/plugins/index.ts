@@ -1,11 +1,31 @@
 import { discord } from "./discord";
 import { farcaster } from "./farcaster";
 import { dash } from "./dash";
+import { rounds } from "./rounds";
+import { shop } from "./shop";
+import { events } from "./events";
+import { quests } from "./quests";
+import { raffles } from "./raffles";
+import { predictions } from "./predictions";
+import { noundry } from "./noundry";
+import { nouns } from "./nouns";
+import { lilnouns } from "./lilnouns";
+import { ethereum } from "./ethereum";
 
 export const plugins = {
     dash,
     discord,
     farcaster,
+    rounds,
+    shop,
+    events,
+    quests,
+    raffles,
+    predictions,
+    noundry,
+    nouns,
+    lilnouns,
+    ethereum,
 } as const;
 
 export type Plugins = keyof typeof plugins;
