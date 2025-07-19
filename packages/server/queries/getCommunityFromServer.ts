@@ -8,7 +8,7 @@ export async function getCommunityFromServer(input: { server: string }) {
             ${communities.id} = (
                 SELECT cp.community
                 FROM ${communityPlugins} AS cp
-                WHERE cp.type = 'discord'
+                WHERE cp.plugin = 'discord'
                 AND EXISTS (
                     SELECT 1
                     FROM jsonb_array_elements(cp.config->'servers') AS item
