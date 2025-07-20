@@ -66,7 +66,7 @@ export const purchaseVotes = createTool({
                     count: context.count,
                 })
                 .onConflictDoUpdate({
-                    target: [purchasedVotes.user],
+                    target: [purchasedVotes.user, purchasedVotes.round],
                     set: {
                         count: sql`${purchasedVotes.count} + ${context.count}`,
                     },
