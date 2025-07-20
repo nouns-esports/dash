@@ -163,33 +163,37 @@ export const xp = pgTable("xp", (t) => ({
     user: t.uuid().notNull(),
     amount: t.bigint({ mode: "number" }).notNull(), // Convert to Bigint
     timestamp: t.timestamp().notNull().defaultNow(),
-    for: t.text({
-        enum: [
-            // Rounds
-            "CASTING_VOTE",
-            "RECEIVING_VOTE",
-            "CREATING_PROPOSAL",
-            "WINNING_ROUND",
-            // Events
-            "ATTENDING_EVENT",
-            // Predictions
-            "PLACING_PREDICTION",
-            "WINNING_PREDICTION",
-            // Quests
-            "COMPLETING_QUEST",
-            // Raffles
-            "ENTERING_RAFFLE",
-            "WINNING_RAFFLE",
-            // Shop
-            "PLACING_ORDER",
-            // Shapshot
-            "SNAPSHOT",
-            // Checkins
-            "CHECKING_IN",
-            // Farcaster
-            "FARCASTER_ACTIVITY",
-        ],
-    }),
+    for: t
+        .text({
+            enum: [
+                // Rounds
+                "CASTING_VOTE",
+                "RECEIVING_VOTE",
+                "CREATING_PROPOSAL",
+                "WINNING_ROUND",
+                // Events
+                "ATTENDING_EVENT",
+                // Predictions
+                "PLACING_PREDICTION",
+                "WINNING_PREDICTION",
+                // Quests
+                "COMPLETING_QUEST",
+                // Raffles
+                "ENTERING_RAFFLE",
+                "WINNING_RAFFLE",
+                // Shop
+                "PLACING_ORDER",
+                // Shapshot
+                "SNAPSHOT",
+                // Checkins
+                "CHECKING_IN",
+                // Farcaster
+                "FARCASTER_ACTIVITY",
+                // Claim
+                "ESCROW_CLAIM",
+            ],
+        })
+        .notNull(),
     quest: t.uuid(),
     snapshot: t.uuid(),
     checkin: t.uuid(),
@@ -199,7 +203,7 @@ export const xp = pgTable("xp", (t) => ({
     vote: t.uuid(),
     round: t.uuid(),
     proposal: t.uuid(),
-    order: t.text(), // TODO: Change to UUID
+    order: t.uuid(),
     raffle: t.uuid(),
     raffleEntry: t.uuid(),
     attendee: t.uuid(),
@@ -216,33 +220,37 @@ export const points = pgTable(
         to: t.uuid(),
         toEscrow: t.uuid(),
         timestamp: t.timestamp().notNull().defaultNow(),
-        for: t.text({
-            enum: [
-                // Predictions
-                "WINNING_PREDICTION",
-                "PLACING_PREDICTION",
-                // Quests
-                "COMPLETING_QUEST",
-                // Raffles
-                "ENTERING_RAFFLE",
-                "WINNING_RAFFLE",
-                // Shop
-                "PLACING_ORDER",
-                "REDEMPTION_DISCOUNT",
-                // Checkins
-                "CHECKING_IN",
-                // Snapshot
-                "SNAPSHOT",
-                // Issuance
-                "ENGAGEMENT_ACTIVITY",
-                "GENERAL_ISSUANCE",
-                // Transfer
-                "USER_TRANSFER",
-                // Claim
-                "ESCROW_CLAIM",
-            ],
-        }),
-        order: t.text(), // TODO: Change to UUID
+        for: t
+            .text({
+                enum: [
+                    // Predictions
+                    "WINNING_PREDICTION",
+                    "PLACING_PREDICTION",
+                    // Quests
+                    "COMPLETING_QUEST",
+                    // Raffles
+                    "ENTERING_RAFFLE",
+                    "WINNING_RAFFLE",
+                    // Shop
+                    "PLACING_ORDER",
+                    "REDEMPTION_DISCOUNT",
+                    // Checkins
+                    "CHECKING_IN",
+                    // Snapshot
+                    "SNAPSHOT",
+                    // Issuance
+                    "ENGAGEMENT_ACTIVITY",
+                    "GENERAL_ISSUANCE",
+                    // Transfer
+                    "USER_TRANSFER",
+                    // Claim
+                    "ESCROW_CLAIM",
+                    // Purchase Votes
+                    "PURCHASING_VOTES",
+                ],
+            })
+            .notNull(),
+        order: t.uuid(),
         checkin: t.uuid(),
         checkpoint: t.uuid(),
         raffle: t.uuid(),
@@ -297,7 +305,7 @@ export const questActions = pgTable("quest_actions", (t) => ({
     id: t.uuid().primaryKey().defaultRandom(),
     quest: t.uuid().notNull(),
     action: t.text().notNull(),
-    plugin: plugins(),
+    plugin: plugins().notNull(),
     description: t.jsonb().array().$type<any>().notNull(),
     input: t.jsonb().$type<{ [key: string]: { [key: string]: any | undefined } }>().notNull(),
 }));
@@ -326,11 +334,13 @@ export const predictions = pgTable(
         name: t.text().notNull(),
         image: t.text().notNull(),
         rules: t.jsonb().$type<any>().notNull(),
-        xp: t.integer().notNull(),
-        _xp: t.jsonb().$type<{
-            predicting: number;
-            winning: number;
-        }>(),
+        xp: t
+            .jsonb()
+            .$type<{
+                predicting: number;
+                winning: number;
+            }>()
+            .notNull(),
         prizePool: t.integer().notNull().default(0),
         closed: t.boolean().notNull().default(false),
         resolved: t.boolean().notNull().default(false),
@@ -406,7 +416,7 @@ export const eventActions = pgTable("event_actions", (t) => ({
     id: t.uuid().primaryKey().defaultRandom(),
     event: t.uuid().notNull(),
     action: t.text().notNull(),
-    plugin: plugins(),
+    plugin: plugins().notNull(),
     description: t.jsonb().array().$type<any>().notNull(),
     input: t.jsonb().$type<{ [key: string]: { [key: string]: any } }>().notNull(),
 }));
@@ -452,51 +462,57 @@ export const rounds = pgTable(
             .text({ enum: ["markdown", "video", "image", "url"] })
             .notNull()
             .default("markdown"),
-        xp: t.jsonb().$type<{
-            // XP recieved for participating in proposing
-            creatingProposal: number;
-            // XP recieved for participating in voting
-            castingVotes: number;
-            // XP recieved per unique voter
-            receivingVotes: number;
-            // XP recieved for winning the round
-            winning: number;
-        }>(),
-        votingConfig: t.jsonb().$type<
-            { purchaseLimit: number | null } & (
-                | { mode: "nouns"; block: number | null }
-                | { mode: "lilnouns"; block: number | null }
-                | { mode: "leaderboard" }
-                | {
-                      mode: "erc20";
-                      tokens: Array<{
-                          address: string;
-                          chain: keyof typeof supportedChains;
-                          block: number | null;
-                          votes: number;
-                      }>;
-                  }
-                | {
-                      mode: "erc721";
-                      tokens: Array<{
-                          address: string;
-                          chain: keyof typeof supportedChains;
-                          block: number | null;
-                          votes: number;
-                      }>;
-                  }
-                | {
-                      mode: "erc1155";
-                      tokens: Array<{
-                          address: string;
-                          chain: keyof typeof supportedChains;
-                          tokenId: number;
-                          block: number | null;
-                          votes: number;
-                      }>;
-                  }
-            )
-        >(),
+        xp: t
+            .jsonb()
+            .$type<{
+                // XP recieved for participating in proposing
+                creatingProposal: number;
+                // XP recieved for participating in voting
+                castingVotes: number;
+                // XP recieved per unique voter
+                receivingVotes: number;
+                // XP recieved for winning the round
+                winning: number;
+            }>()
+            .notNull(),
+        votingConfig: t
+            .jsonb()
+            .$type<
+                { purchaseLimit: number | null } & (
+                    | { mode: "nouns"; block: number | null }
+                    | { mode: "lilnouns"; block: number | null }
+                    | { mode: "leaderboard" }
+                    | {
+                          mode: "erc20";
+                          tokens: Array<{
+                              address: string;
+                              chain: keyof typeof supportedChains;
+                              block: number | null;
+                              votes: number;
+                          }>;
+                      }
+                    | {
+                          mode: "erc721";
+                          tokens: Array<{
+                              address: string;
+                              chain: keyof typeof supportedChains;
+                              block: number | null;
+                              votes: number;
+                          }>;
+                      }
+                    | {
+                          mode: "erc1155";
+                          tokens: Array<{
+                              address: string;
+                              chain: keyof typeof supportedChains;
+                              tokenId: number;
+                              block: number | null;
+                              votes: number;
+                          }>;
+                      }
+                )
+            >()
+            .notNull(),
         content: t.text().notNull(),
         description: t.jsonb().$type<any>(),
         createdAt: t.timestamp("created_at").notNull().defaultNow(),
@@ -530,7 +546,7 @@ export const roundActions = pgTable("round_actions", (t) => ({
     required: t.boolean().notNull().default(true),
     votes: t.integer().notNull().default(0),
     action: t.text().notNull(),
-    plugin: plugins(),
+    plugin: plugins().notNull(),
     description: t.jsonb().array().$type<any>().notNull(),
     input: t.jsonb().$type<{ [key: string]: { [key: string]: any } }>().notNull(),
 }));
@@ -572,7 +588,6 @@ export const proposals = pgTable(
         video: t.text(),
         url: t.text(),
         createdAt: t.timestamp("created_at").notNull().defaultNow(),
-        hidden: t.boolean().notNull().default(false),
         hiddenAt: t.timestamp("hidden_at"),
         deletedAt: t.timestamp("deleted_at"),
         winner: t.smallint(),
@@ -591,9 +606,7 @@ export const votes = pgTable(
         count: t.smallint().notNull(),
         timestamp: t.timestamp().notNull().defaultNow(),
     }),
-    // (t) => [
-    // 	unique("votes_user_proposal_round_unique").on(t.user, t.proposal, t.round),
-    // ],
+    (t) => [unique("votes_user_proposal_unique").on(t.user, t.proposal)],
 );
 
 export const raffles = pgTable(
@@ -607,10 +620,13 @@ export const raffles = pgTable(
         start: t.timestamp().notNull(),
         end: t.timestamp().notNull(),
         cost: t.integer().notNull(),
-        xp: t.jsonb().$type<{
-            entering: number;
-            winning: number;
-        }>(),
+        xp: t
+            .jsonb()
+            .$type<{
+                entering: number;
+                winning: number;
+            }>()
+            .notNull(),
         winners: t.integer().notNull(),
         limit: t.integer(),
         event: t.uuid(),
@@ -618,11 +634,6 @@ export const raffles = pgTable(
         active: t.boolean().notNull().default(false),
         createdAt: t.timestamp("created_at").notNull().defaultNow(),
         deletedAt: t.timestamp("deleted_at"),
-        entryActions: t.text("entry_actions").array(),
-        entryActionInputs: t
-            .jsonb("entry_action_inputs")
-            .array()
-            .$type<Array<{ [key: string]: any }>>(),
         embedding: t.vector({ dimensions: 1536 }),
     }),
     (t) => [

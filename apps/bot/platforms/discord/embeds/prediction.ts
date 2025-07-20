@@ -18,7 +18,7 @@ export function PredictionEmbed(props: {
             url: `https://nouns.gg/predictions/${props.prediction.id}`,
             color: "#4A5EEB",
             footer: {
-                text: `Earns ${props.prediction.xp}xp`,
+                text: `Earns up to ${props.prediction.xp.winning + props.prediction.xp.predicting}xp`,
             },
         }),
         components: [

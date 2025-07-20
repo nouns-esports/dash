@@ -64,6 +64,7 @@ export async function enterRaffle(input: { user: string; raffle: string; amount:
             raffle: input.raffle,
             raffleEntry: raffleEntry.id,
             community: raffle.community,
+            for: "ENTERING_RAFFLE",
         });
 
         await tx
@@ -88,6 +89,7 @@ export async function enterRaffle(input: { user: string; raffle: string; amount:
             raffle: input.raffle,
             raffleEntry: raffleEntry.id,
             community: raffle.community,
+            for: "ENTERING_RAFFLE",
         });
     });
 

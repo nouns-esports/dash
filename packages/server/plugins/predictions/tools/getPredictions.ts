@@ -28,7 +28,10 @@ export const getPredictions = createTool({
             name: z.string().describe("The name of the prediction"),
             rules: z.string().describe("The rules of the prediction"),
             image: z.string().describe("The image of the prediction"),
-            xp: z.number().describe("The xp earned for predicting the right outcome"),
+            xp: z.object({
+                predicting: z.number().describe("The xp earned for participation"),
+                winning: z.number().describe("The xp earned for winning the prediction"),
+            }),
             pool: z.number().describe("Amount of points pooled in total on this prediction"),
             closed: z.boolean().describe("Whether the prediction is closed for new predictions"),
             resolved: z.boolean().describe("Whether the prediction has been finalized"),

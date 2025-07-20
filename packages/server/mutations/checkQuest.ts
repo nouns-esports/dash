@@ -99,6 +99,7 @@ export async function checkQuest(input: { user: string; quest: string }) {
             user: input.user,
             amount: quest.xp,
             community: quest.community.id,
+            for: "COMPLETING_QUEST",
         });
 
         await tx

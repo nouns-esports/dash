@@ -141,6 +141,7 @@ export async function createUser(
                     fromEscrow: escrow.id,
                     to: createdUser.id,
                     amount: escrow.points,
+                    for: "ESCROW_CLAIM",
                 });
             }
 
@@ -149,6 +150,7 @@ export async function createUser(
                     user: createdUser.id,
                     community: escrow.community,
                     amount: escrow.xp,
+                    for: "ESCROW_CLAIM",
                 });
             }
 

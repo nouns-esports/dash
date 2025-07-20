@@ -77,6 +77,7 @@ export const tipPoints = createTool({
                     from: user.id,
                     to: mention.user.id,
                     amount: context.amount,
+                    for: "USER_TRANSFER",
                 });
             } else {
                 await tx

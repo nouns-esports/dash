@@ -55,6 +55,7 @@ export const purchaseVotes = createTool({
                 from: user.id,
                 to: null,
                 amount: cost,
+                for: "PURCHASING_VOTES",
             });
 
             await tx

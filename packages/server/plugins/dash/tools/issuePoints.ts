@@ -52,6 +52,7 @@ export const issuePoints = createTool({
                 community: community.id,
                 to: user.id,
                 amount: context.amount,
+                for: "GENERAL_ISSUANCE",
             });
         });
 
