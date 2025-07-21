@@ -13,7 +13,7 @@ export function ProductEmbed(props: { product: z.infer<typeof getProducts.output
                 width: 1200,
                 height: 675,
             }),
-            url: `https://nouns.gg/products/${props.product.id}`,
+            url: `https://nouns.gg/shop`,
             color: "#4A5EEB",
             footer: {
                 text:
@@ -29,7 +29,7 @@ export function ProductEmbed(props: { product: z.infer<typeof getProducts.output
                 Button({
                     label: "View",
                     type: "link",
-                    url: `https://nouns.gg/products/${props.product.id}`,
+                    url: `https://nouns.gg/shop`,
                 }),
             ]),
         ],
