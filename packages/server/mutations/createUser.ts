@@ -58,11 +58,11 @@ export async function createUser(
             if (input.platform === "discord") {
                 privyUser = await privyClient.importUser({
                     linkedAccounts: [
+                        // @ts-expect-error - Wait for Privy to fix this
                         {
                             type: "discord_oauth",
                             username: input.username,
                             subject: input.subject,
-                            email: null,
                         },
                     ],
                 });
