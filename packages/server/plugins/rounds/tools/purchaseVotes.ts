@@ -62,7 +62,7 @@ export const purchaseVotes = createTool({
                 .insert(purchasedVotes)
                 .values({
                     user: user.id,
-                    round: "c6fd484a-67e7-4ccb-97ac-4cbeb2a07405",
+                    round: "efaecac8-883f-4a57-91c4-4ca47d917895",
                     count: context.count,
                 })
                 .onConflictDoUpdate({
